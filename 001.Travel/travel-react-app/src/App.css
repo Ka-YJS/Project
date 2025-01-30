@@ -1,0 +1,195 @@
+/* 공통 스타일 */
+@font-face {
+  font-family: 'GowunDodum-Regular'; /* 폰트 이름 */
+  src: url('/public/font/GowunDodum-Regular.ttf') format('truetype');
+}
+
+body {
+  font-family: 'GowunDodum-Regular', sans-serif; /* 기본 폰트로 설정 */
+}
+
+.App {
+  text-align: center;
+}
+
+.file-input {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px;
+}
+
+.file-input input {
+  display: none;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin: 10px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+}
+
+/* button:hover {
+  background-color: #ABF200;
+} */
+
+/* 홈 화면 */
+.home-screen {
+  height: 90vh;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.home-header {
+  position: absolute;
+  top: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 수평 중앙 정렬 */
+  flex-direction: column;
+}
+
+.logo {
+  width: 100px;
+  height: auto;
+}
+
+.icon-container {
+  display: flex;
+  gap: 10px;
+  
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  background-color: #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 메인 화면 */
+.main-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  background-color: #f9f9f9;
+  margin-top: 140px;
+}
+
+.main-screen .content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+.main-header {
+  position: absolute;
+  top: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.image-slider {
+  width: 1900px; /* 슬라이드 영역의 크기 */
+  height: 75vh; /* 이미지 영역의 높이 */
+  position: relative; /* 이미지들을 겹치게 만들기 위해 position을 설정 */
+  overflow: hidden; /* 넘치는 이미지를 숨김 */
+}
+
+.image-slider-inner {
+  display: flex; /* 이미지들이 가로로 배치되도록 */
+  transition: transform 1s ease-out; /* 슬라이드 애니메이션 */
+}
+
+.slider-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 이미지 비율 유지하며 채우기 */
+}
+
+
+.main-button {
+  padding: 15px 20px; /* 버튼 크기 */
+  font-size: 24px; /* 버튼 텍스트 크기 */
+  background-color: rgba(89, 172, 103, 0.8); /* 배경색, 약간 투명하게 설정 */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+}
+.button-row {
+  position: absolute; /* 버튼을 이미지 위에 절대적으로 배치 */
+  top: 50%; /* 수직으로 중앙 정렬 */
+  left: 50%; /* 수평으로 중앙 정렬 */
+  transform: translate(-50%, -50%); /* 정확히 가운데 정렬 */
+  display: flex;
+  gap: 20px; /* 버튼 사이 간격 */
+  z-index: 1; /* 버튼이 이미지 위에 표시되도록 설정 */
+}
+
+.main-button:hover {
+  background-color: #d18a38;
+  transform: translateY(-5px);
+}
+
+.main-button:active {
+  background-color: #004085;
+  transform: translateY(2px);
+}
+
+.button-row {
+  display: flex;
+  gap: 20px; /* 버튼 간격 설정 */
+}
+
+/* Header.css */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #333;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000;
+}
+.AppWrapper{
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+};

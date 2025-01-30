@@ -1,0 +1,248 @@
+/* PersonalInfo.css */
+
+@font-face {
+  font-family: 'GowunDodum-Regular'; /* 폰트 이름 */
+  src: url('/public/font/GowunDodum-Regular.ttf') format('truetype');
+}
+
+body {
+  font-family: 'GowunDodum-Regular', sans-serif; /* 기본 폰트로 설정 */
+}
+
+/* 전체 페이지를 가운데로 배치하는 스타일 */
+.page_wrapper {
+  display: flex;
+  justify-content: center;  /* 수평 중앙 정렬 */
+  align-items: center;      /* 수직 중앙 정렬 */
+  height: auto;            /* 화면 높이를 100%로 설정 */
+  margin: 0;/* 기본 여백 제거 */
+}
+
+/* Flexbox를 사용하여 이미지와 텍스트 나란히 배치 */
+.wrapper {
+  display: flex;
+  align-items: center;      /* 세로 중앙 정렬 */
+  padding: 20px;
+  gap: 20px;
+  border : solid rgb(196, 187, 187) 2px;
+}
+/* 이미지와 텍스트 사이에 여백 추가 */
+.personal_container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.user-info-item {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.profile_wrapper {
+  display: flex;
+  flex-direction: column;  /* 수직 정렬 */
+  align-items: center;     /* 수평 중앙 정렬 */
+  justify-content: center; /* 수직 중앙 정렬 */
+  gap: 10px;               /* 요소들 사이의 간격 */
+}
+
+/* 프로필 이미지를 원형으로 만들기 */
+.profile_image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(100%); /* 텍스트가 컨테이너 오른쪽 바깥에서 시작 */
+  }
+  50% {
+    transform: translateX(0); /* 텍스트가 컨테이너 안에 완전히 표시됨 */
+  }
+  100% {
+    transform: translateX(-100%); /* 텍스트가 컨테이너 왼쪽 바깥으로 나감 */
+  }
+}
+
+.sliding-text {
+  display: inline-block;
+  animation: slide 5s linear infinite; /* 슬라이드 애니메이션 */
+}
+
+/* 팝업의 배경색; 여백; 그림자 등 */
+.popup_wrapper {
+  height: auto;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+}
+
+.popup_wrapper h2 {
+  margin-bottom: 20px;
+};
+
+/* Modal 고정 위치 및 중앙 정렬 */
+.custom_modal {
+  width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  top: 20%;
+}
+
+/* Modal 버튼 */
+.custom_modal_icon {
+  width: 400px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  position: relative;
+  margin: 0 auto; /* 수평 중앙 정렬 */
+  top: 50%; /* 화면 세로 중앙 정렬 */
+  transform: translateY(-50%); /* 정확한 세로 중앙 위치 */
+}
+
+/* Modal 스타일 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7); /* 어두운 배경 */
+  overflow: hidden; /* 페이지의 스크롤 방지 */
+  display: flex;
+  justify-content: center;
+  align-items: center; /* 화면 중앙에 오버레이 및 모달 표시 */
+  z-index: 9999; /* 다른 요소들보다 위에 표시되도록 설정 */
+}
+
+/* TopIcon */
+.profile_button{
+  width: auto;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+};
+
+/* 버튼을 감싸는 컨테이너 */
+.button-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+  justify-content: center; /* 버튼을 가운데 정렬 */
+}
+
+.custom-button {
+  background-color: #61cf64; /* 밝은 초록색 */
+  color: white;
+  border: none;
+  outline: none; /* 테두리가 안 보이게 하기 */
+  padding: 12px 24px; /* 여백 추가 */
+  border-radius: 15px; /* 둥글게 만들기 */
+  font-size: 16px;
+  width: 150px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s ease;
+}
+
+.custom-button:hover {
+  background-color: #45a347; /* 클릭 시 진한 초록색 */
+  transform: scale(1.05); /* 마우스를 올리면 버튼 크기 확대 */
+}
+
+.delete-button {
+  background-color: #ff4d4f; /* 빨간색 */
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 15px; /* 둥글게 만들기 */
+  font-size: 16px;
+  width: 150px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s ease;
+}
+
+.delete-button:hover {
+  background-color: #e03e3e; /* 클릭 시 어두운 빨간색 */
+  transform: scale(1.05);
+}
+
+.info-button{
+  margin: "5px";
+  padding: "10px";
+  background-color: "#007bff";
+  color: "white";
+  border: "none";
+  border-radius: "5px";
+};
+
+.home-header {
+  display: flex;
+  justify-content: space-between; /* 왼쪽-오른쪽으로 배치 */
+  align-items: center; /* 수직 중앙 정렬 */
+  padding: 10px;
+  background-color: #f9f9f9;
+  z-index: 2000; /* 기본적으로 다른 요소보다 위에 배치되게 설정 */
+  position: relative; /* 부모 요소로 설정 */
+  
+}
+
+.icon-container {
+  display: flex;
+  gap: 15px; /* 아이콘 간 간격 */
+  margin-left: auto; /* 오른쪽으로 이동 */
+  align-items: center;
+  margin-right: 40px;
+  
+}
+
+.icon {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 15px;
+  border-radius: 20px; /* 모서리를 둥글게 */
+  background: linear-gradient(135deg, #df965b, #fff); /* 그라데이션 배경 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06); /* 그림자 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* 호버 애니메이션 */
+  
+}
+
+
+.tooltip {
+  visibility: hidden; /* 기본적으로 숨김 */
+  opacity: 0; /* 기본적으로 투명 */
+  position: absolute;
+  bottom: -38px; /* 아이콘 아래에 위치 */
+  left: 50%; /* 가운데 정렬 */
+  transform: translateX(-50%); /* 가운데 정렬 보정 */
+  background-color: #df965b; /* 툴팁 배경색 */
+  color: #fff; /* 툴팁 글씨 색상 */
+  padding: 3px 6px; /* 여백 */
+  border-radius: 4px; /* 둥근 모서리 */
+  width: auto;
+  height: auto;
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  z-index: 500; /* 위에 표시되도록 설정 */
+  transition: opacity 0.3s ease-in-out; /* 부드러운 전환 효과 */
+  
+}
+
+.icon:hover .tooltip {
+  visibility: visible; /* 툴팁 표시 */
+  opacity: 1;          /* 투명도 설정 */
+  transition: opacity 0.2s ease-in-out; /* 부드러운 애니메이션 */
+}
