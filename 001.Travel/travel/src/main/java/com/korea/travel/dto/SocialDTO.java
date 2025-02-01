@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Role;
 
 import com.korea.travel.model.SocialEntity;
 import com.korea.travel.model.SocialEntity.AuthProvider;
+import com.korea.travel.security.SocialRole;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -72,7 +73,7 @@ public class SocialDTO {
                     .socialId(socialId)
                     .createdAt(createdAt)
                     .authProvider(authProvider)
-                    .role(Role.USER)
+                    .role(SocialRole.USER)
                     .build();
         }
     }

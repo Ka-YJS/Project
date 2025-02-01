@@ -2,6 +2,8 @@ package com.korea.travel.model;
 
 import org.springframework.context.annotation.Role;
 
+import com.korea.travel.security.SocialRole;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -36,7 +38,7 @@ public class SocialEntity {
     private AuthProvider authProvider;  // 인증 제공자 (GOOGLE, KAKAO)
     
     @Enumerated(EnumType.STRING)
-    private Role role;            // 사용자 권한
+    private SocialRole role;            // 사용자 권한
     
     // AuthProvider Enum 정의
     public enum AuthProvider {
@@ -73,7 +75,7 @@ public class SocialEntity {
     @PrePersist
     protected void onCreate() {
         if (role == null) {
-            role = Role.USER;
+            role = SocialRole.USER;
         }
     }
 }
