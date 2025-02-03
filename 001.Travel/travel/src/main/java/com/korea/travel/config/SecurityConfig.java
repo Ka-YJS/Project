@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 	
 	private final TokenProvider tokenProvider;
+	private final GoogleOAuthUserServiceImpl googleOAuthUserService;
 	
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -36,10 +37,14 @@ public class SecurityConfig {
           			"/travel/userFindPassword",
           			"/travel/userResetPassword",
           			"/travel/oauth2/google/callback",
-          			"/travel/email/**"
+          			"/travel/email/**",
+          		    "/social/**",  // OAuth2 엔드포인트도 /social로 통일
+          		    "/api/social/**"
           			).permitAll() //경로는 인증 없이 허용
           	.anyRequest().authenticated()  // 그 외 요청은 인증 필요
         	.and()
+            .oauth2Login()  // OAuth2 로그인 활성화
+            .userService(googleOAuthUserService)  // OAuth2 사용자 서비스 설정
         	.cors()//CORS 설정 활성화
         	.and()
         	//JWT 인증 필터 추가 요청이 들어올 때마다 JWT 토큰을 검증하고 인증처리하도록
