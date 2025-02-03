@@ -14,7 +14,8 @@ public class WebConfig implements WebMvcConfigurer {
 				.allowedOrigins("http://todo-test-dev.store","https://todo-test-dev.store")	//허용할 출처
 				.allowedMethods("GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS")	//허용할 HTTP 메서드
 				.allowedHeaders("*")		//모든 헤더 허용
-				.allowCredentials(true);	//쿠키나 인증 정보를 포함한 요청 허용
+				.allowCredentials(true)	//쿠키나 인증 정보를 포함한 요청 허용
+		        .exposedHeaders("Authorization");// OAuth2 리디렉션을 위한 설정 추가
 	}
 	
 	//업로드된 파일을 제공할 수 있도록 설정
