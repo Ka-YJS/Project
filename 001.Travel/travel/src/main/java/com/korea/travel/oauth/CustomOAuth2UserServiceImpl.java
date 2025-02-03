@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import com.korea.travel.model.SocialEntity;
+import com.korea.travel.model.SocialEntity.AuthProvider;
 import com.korea.travel.persistence.SocialRepository;
 import com.korea.travel.security.CustomOAuth2User;
 import lombok.extern.slf4j.Slf4j;
@@ -47,15 +48,18 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
            throw new OAuth2AuthenticationException("Unsupported provider: " + provider);
        }
 
-       SocialEntity socialEntity = socialRepository.findByEmail(email)
-           .map(entity -> entity.update(name, picture))
-           .orElse(SocialEntity.builder()
-                   .email(email)
-                   .name(name)
-                   .picture(picture)
-                   .socialId(socialId)
-                   .provider(provider)
-                   .build());
+       SocialEntity socialEntity = socialRepository.findByEmailAndAuthProvider(email, AuthProvider.valueOf(provider.toUpperCase()))
+    		    .map(entity -> {
+    		        entity.updateOAuthInfo(name, picture, AuthProvider.valueOf(provider.toUpperCase()));
+    		        return entity;
+    		    })
+    		    .orElse(SocialEntity.builder()
+    		        .email(email)
+    		        .name(name)
+    		        .picture(picture)
+    		        .socialId(socialId)
+    		        .authProvider(AuthProvider.valueOf(provider.toUpperCase()))
+    		        .build());
                    
        socialEntity = socialRepository.save(socialEntity);
        log.info("OAuth2 user processed - email: {}, provider: {}", email, provider);
