@@ -8,7 +8,7 @@ const OAuthLogIn = () => {
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
             // 백엔드로 토큰 전송
-            const response = await axios.post('/api/auth/google', {
+            const response = await axios.post('/api/social/user', {
                 credential: credentialResponse.credential
             });
             
@@ -43,7 +43,7 @@ const OAuthLogIn = () => {
             success: async (authObj) => {
                 try {
                     // 백엔드로 인증 정보 전송
-                    const response = await axios.post('/api/auth/kakao', {
+                    const response = await axios.post('/api/social/user', {
                         access_token: authObj.access_token
                     });
                     
@@ -63,7 +63,7 @@ const OAuthLogIn = () => {
                 console.error('Kakao login failed:', err);
                 alert('카카오 로그인에 실패했습니다.');
             },
-            scope: 'profile_nickname, profile_image, account_email' // 필요한 scope 추가
+            scope: 'profile_nickname, profile_image' // 필요한 scope 추가
         });
     };
 
