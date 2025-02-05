@@ -41,7 +41,7 @@ function App() {
 
   useEffect(() => {
     if (window.Kakao && !window.Kakao.isInitialized()) {
-      window.Kakao.init(process.env.REACT_APP_KAKAO_APP_KEY);
+      window.Kakao.init(process.env.REACT_APP_KAKAO_KEY);
     }
   }, []);
 
