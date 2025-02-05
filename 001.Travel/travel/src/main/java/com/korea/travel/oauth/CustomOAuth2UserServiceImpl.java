@@ -9,22 +9,23 @@ import org.springframework.stereotype.Service;
 import com.korea.travel.model.SocialEntity;
 import com.korea.travel.model.SocialEntity.AuthProvider;
 import com.korea.travel.persistence.SocialRepository;
-import com.korea.travel.security.CustomOAuth2User;
+import com.korea.travel.oauth.CustomOAuth2User;
 import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
 public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
-   
+
    @Autowired
    private SocialRepository socialRepository;
-   
-   @Override 
+
+   @Override
    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
        OAuth2User oauth2User = super.loadUser(userRequest);
        Map<String, Object> attributes = oauth2User.getAttributes();
-       
+
        String email;
        String name;
        String picture;
@@ -33,13 +34,13 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
 
        if (provider.equals("google")) {
            email = (String) attributes.get("email");
-           name = (String) attributes.get("name"); 
+           name = (String) attributes.get("name");
            picture = (String) attributes.get("picture");
            socialId = (String) attributes.get("sub");
        } else if (provider.equals("kakao")) {
            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
            Map<String, Object> kakaoProfile = (Map<String, Object>) kakaoAccount.get("profile");
-           
+
            email = (String) kakaoAccount.get("email");
            name = (String) kakaoProfile.get("nickname");
            picture = (String) kakaoProfile.get("profile_image_url");
@@ -48,22 +49,30 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
            throw new OAuth2AuthenticationException("Unsupported provider: " + provider);
        }
 
-       SocialEntity socialEntity = socialRepository.findByEmailAndAuthProvider(email, AuthProvider.valueOf(provider.toUpperCase()))
-    		    .map(entity -> {
-    		        entity.updateOAuthInfo(name, picture, AuthProvider.valueOf(provider.toUpperCase()));
-    		        return entity;
-    		    })
-    		    .orElse(SocialEntity.builder()
-    		        .email(email)
-    		        .name(name)
-    		        .picture(picture)
-    		        .socialId(socialId)
-    		        .authProvider(AuthProvider.valueOf(provider.toUpperCase()))
-    		        .build());
-                   
+       SocialEntity socialEntity = socialRepository.findByEmailAndAuthProvider(
+               email, 
+               AuthProvider.valueOf(provider.toUpperCase())
+           )
+           .map(entity -> {
+               entity.updateOAuthInfo(
+                   name, 
+                   picture, 
+                   AuthProvider.valueOf(provider.toUpperCase())
+               );
+               return entity;
+           })
+           .orElse(SocialEntity.builder()
+               .email(email)
+               .name(name)
+               .picture(picture)
+               .socialId(socialId)
+               .authProvider(AuthProvider.valueOf(provider.toUpperCase()))
+               .createdAt(LocalDateTime.now().toString())
+               .build());
+
        socialEntity = socialRepository.save(socialEntity);
        log.info("OAuth2 user processed - email: {}, provider: {}", email, provider);
 
-       return new CustomOAuth2User(email, name, picture, socialId, provider, attributes);
+       return new CustomOAuth2User(socialEntity, attributes);
    }
 }
