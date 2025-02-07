@@ -9,7 +9,10 @@ const OAuthLogIn = () => {
         try {
             // 백엔드로 토큰 전송
             const response = await axios.post('/api/social/user', {
-                credential: credentialResponse.credential
+                socialId: credentialResponse.sub,
+                name: credentialResponse.name,
+                email: credentialResponse.email,
+                picture: credentialResponse.picture
             });
             
             // 로그인 성공 처리
