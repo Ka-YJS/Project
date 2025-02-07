@@ -18,11 +18,11 @@ const TopIcon = ({text}) => {
   const { user } = useContext(UserContext); // userNickName 가져오기
   const navigate = useNavigate();
 
-useEffect(() => {
-
-  console.log("프로필 경로" + user.userProfileImage)
-
-},[])
+  useEffect(() => {
+    if (user?.userProfileImage) {
+      console.log("프로필 경로" + user.userProfileImage);
+    }
+  },[]);
 
   const iconComponents = [
     { id: "home", component: <SlHome size={23} />, route: "/main", label: "홈"},
@@ -34,8 +34,7 @@ useEffect(() => {
   //로그아웃 버튼
   const handleLogout = () => {
     localStorage.clear();
-    console.log("로그아웃:"+user)
-    console.log("로그아웃:"+user.userid)
+    console.log("로그아웃:", user?.userid || "No user");
     alert("로그아웃 되었습니다.");
     navigate('/login');
   };
@@ -157,7 +156,7 @@ useEffect(() => {
               }}
               className="sliding-text"
             >
-              시골쥐 {user.userNickName || "시골쥐"}님
+              시골쥐 {user?.userNickName || "시골쥐"}님
             </p>
           </div>
         </div>
