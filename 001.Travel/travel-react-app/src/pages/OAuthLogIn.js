@@ -2,13 +2,14 @@ import React from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import "../css/Strat.css";
+import config from "../Apikey";
 
 const OAuthLogIn = () => {
     // Google 로그인 성공 시 호출되는 함수
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
             // 백엔드로 토큰 전송
-            const response = await axios.post('/api/social/user', {
+            const response = await axios.post(`http://${config.IP_ADD}/api/social/user`, {
                 socialId: credentialResponse.sub,
                 name: credentialResponse.name,
                 email: credentialResponse.email,
