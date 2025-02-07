@@ -38,6 +38,7 @@ public class SecurityConfig {
                    "/travel/oauth2/google/callback",
                    "/travel/email/**",
                    "/social/**",  // OAuth2 엔드포인트도 /social로 통일
+                   "/api/**",
                    "/api/social/**",
                    "/login/oauth2/code/google"
                ).permitAll()  //경로는 인증 없이 허용
@@ -46,7 +47,7 @@ public class SecurityConfig {
            .oauth2Login(oauth2 -> oauth2  // OAuth2 로그인 활성화
                .userInfoEndpoint(userInfo -> userInfo
                    .userService(customOAuth2UserService))  // OAuth2 사용자 서비스 설정
-                   .defaultSuccessUrl("http://localhost:3000")
+               .defaultSuccessUrl("http://localhost:3000", true)
            )//oauth2Login
            .cors(cors -> cors.configurationSource(corsConfigurationSource()))  //CORS 설정 활성화
            //JWT 인증 필터 추가 요청이 들어올 때마다 JWT 토큰을 검증하고 인증처리하도록
