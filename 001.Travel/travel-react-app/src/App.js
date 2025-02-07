@@ -30,7 +30,7 @@ function App() {
   const [user, setUser] = useState(() => {
     // 새로고침 시 로컬 스토리지에서 사용자 정보 복원
     const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : {};
+    return savedUser ? JSON.parse(savedUser) : null;
   });
   const [googleUser,setGoogleUser] = useState({});
 
