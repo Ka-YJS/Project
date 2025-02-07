@@ -30,13 +30,15 @@ function App() {
   const [user, setUser] = useState(() => {
     // 새로고침 시 로컬 스토리지에서 사용자 정보 복원
     const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
+    return savedUser && savedUser !== "undefined" ? JSON.parse(savedUser) : null;
   });
   const [googleUser,setGoogleUser] = useState({});
-
+  
+  // user 상태가 변경될 때 로컬 스토리지에 저장
   useEffect(() => {
-    // user 상태가 변경될 때 로컬 스토리지에 저장
-    localStorage.setItem("user", JSON.stringify(user));
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    }
   }, [user]);
 
   useEffect(() => {
