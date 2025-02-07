@@ -78,7 +78,7 @@ const Write = () => {
                 console.log(key, value);
             }
             console.log(user.token);
-            const response = await axios.post(`https://${config.IP_ADD}/travel/write/${user.id}`, formData, {
+            const response = await axios.post(`http://${config.IP_ADD}/travel/write/${user.id}`, formData, {
                 headers: { 
                     "Content-Type": "multipart/form-data" ,
                     Authorization: `Bearer ${user.token}`,

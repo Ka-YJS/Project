@@ -23,7 +23,7 @@ const MyPost = () => {
     // 서버에서 게시물 가져오기
     const getMyPostList = async () => {
         try {
-            const response = await axios.get(`https://${config.IP_ADD}/travel/myPosts/${user.id}`, {
+            const response = await axios.get(`http://${config.IP_ADD}/travel/myPosts/${user.id}`, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                     Authorization: `Bearer ${user.token}`,
@@ -34,7 +34,7 @@ const MyPost = () => {
 
             // 좋아요 상태 가져오기
             const likedStatusPromises = fetchedPosts.map((post) =>
-                axios.get(`https://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
+                axios.get(`http://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
                 headers: { Authorization: `Bearer ${user.token}` },
                 })
             );
@@ -63,7 +63,7 @@ const MyPost = () => {
     const likeButtonClick = async (postId) => {
         try {
             const isLiked = likedPosts[postId];
-            const url = `https://${config.IP_ADD}/travel/likes/${postId}`;
+            const url = `http://${config.IP_ADD}/travel/likes/${postId}`;
             const method = isLiked ? "delete" : "post";
 
             await axios({ method, url, headers: { Authorization: `Bearer ${user.token}` } });
@@ -154,7 +154,7 @@ const MyPost = () => {
                                             onClick={() => handlePostClick(post.postId)}
                                             src={
                                                 post.imageUrls && post.imageUrls.length > 0
-                                                    ? `https://${config.IP_ADD}${post.imageUrls[0]}`
+                                                    ? `http://${config.IP_ADD}${post.imageUrls[0]}`
                                                     : imageno
                                             }
                                             alt="썸네일"

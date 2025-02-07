@@ -123,7 +123,7 @@ useEffect(() => {
             }}
             src={
               user?.userProfileImage 
-                ? `https://${config.IP_ADD}${user.userProfileImage}`
+                ? `http://${config.IP_ADD}${user.userProfileImage}`
                 : defaultImage  
             } 
             onError={(e) => {

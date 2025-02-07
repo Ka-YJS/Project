@@ -21,7 +21,7 @@ const PostDetail = () => {
     // 게시글 상세 데이터 가져오기
     const getPostDetail = async () => {
         try {
-            const response = await axios.get(`https://${config.IP_ADD}/travel/posts/postDetail/${id}`, {
+            const response = await axios.get(`http://${config.IP_ADD}/travel/posts/postDetail/${id}`, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                     Authorization: `Bearer ${user.token}`,
@@ -43,7 +43,7 @@ const PostDetail = () => {
     // 좋아요 상태 가져오기
     const getLikeStatus = async () => {
         try {
-            const response = await axios.get(`https://${config.IP_ADD}/travel/likes/${id}/isLiked`, {
+            const response = await axios.get(`http://${config.IP_ADD}/travel/likes/${id}/isLiked`, {
                 headers: { 
                     Authorization: `Bearer ${user.token}` ,
                     Accept: '*/*'
@@ -60,7 +60,7 @@ const PostDetail = () => {
     const likeButtonClick = async () => {
         try {
             console.log("isLiked"+isLiked)
-            const url = `https://${config.IP_ADD}/travel/likes/${id}`;
+            const url = `http://${config.IP_ADD}/travel/likes/${id}`;
             const method = isLiked ? "delete" : "post"; // Toggle between POST and DELETE
     
             // Make the API request to toggle like status
@@ -121,7 +121,7 @@ const PostDetail = () => {
     const handleDelete = async () => {
         if (window.confirm("게시글을 삭제하시겠습니까?")) {
             try {
-                const response = await axios.delete(`https://${config.IP_ADD}/travel/postDelete/${id}`, {
+                const response = await axios.delete(`http://${config.IP_ADD}/travel/postDelete/${id}`, {
                     headers: {
                         Authorization: `Bearer ${user.token}`,
                         Accept: '*/*'
@@ -231,7 +231,7 @@ const PostDetail = () => {
                                 }}
                             >
                                 <img
-                                    src={`https://${config.IP_ADD}${image}`}
+                                    src={`http://${config.IP_ADD}${image}`}
                                     alt={`image-${index}`}
                                     style={{
                                         height: "20vh",
