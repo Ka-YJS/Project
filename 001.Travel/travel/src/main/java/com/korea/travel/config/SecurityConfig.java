@@ -40,14 +40,18 @@ public class SecurityConfig {
                    "/social/**",  // OAuth2 엔드포인트도 /social로 통일
                    "/api/**",
                    "/api/social/**",
-                   "/login/oauth2/code/google"
+                   "/login/oauth2/code/google",
+                   "/static/**"
                ).permitAll()  //경로는 인증 없이 허용
                .anyRequest().authenticated()  // 그 외 요청은 인증 필요
            )//authorizeHttpRequests
            .oauth2Login(oauth2 -> oauth2  // OAuth2 로그인 활성화
                .userInfoEndpoint(userInfo -> userInfo
                    .userService(customOAuth2UserService))  // OAuth2 사용자 서비스 설정
-               .defaultSuccessUrl("http://localhost:3000", true)
+               .successHandler((request, response, authentication) -> {
+                   // JWT 토큰 생성 및 쿠키/헤더 설정
+                   // 프론트엔드로 리다이렉트
+               })
            )//oauth2Login
            .cors(cors -> cors.configurationSource(corsConfigurationSource()))  //CORS 설정 활성화
            //JWT 인증 필터 추가 요청이 들어올 때마다 JWT 토큰을 검증하고 인증처리하도록
@@ -70,7 +74,7 @@ public class SecurityConfig {
    @Bean
    public CorsConfigurationSource corsConfigurationSource() {
        CorsConfiguration configuration = new CorsConfiguration();
-       configuration.setAllowedOrigins(Arrays.asList("http://todo-test-dev.store", "https://todo-test-dev.store", "http://localhost:3000"));
+       configuration.setAllowedOrigins(Arrays.asList("http://todo-test-dev.store", "https://todo-test-dev.store", "http://localhost:3000", "http://localhost:9090"));
        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
        configuration.setAllowedHeaders(Arrays.asList("*"));
        configuration.setAllowCredentials(true);
