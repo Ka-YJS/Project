@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import com.korea.travel.model.SocialEntity;
@@ -17,62 +18,82 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
-
    @Autowired
    private SocialRepository socialRepository;
 
    @Override
    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-       OAuth2User oauth2User = super.loadUser(userRequest);
-       Map<String, Object> attributes = oauth2User.getAttributes();
+       try {
+           OAuth2User oauth2User = super.loadUser(userRequest);
+           Map<String, Object> attributes = oauth2User.getAttributes();
+           
+           log.info("OAuth2 attributes received: {}", attributes);
+           
+           String email;
+           String name;
+           String picture;
+           String socialId;
+           String provider = userRequest.getClientRegistration().getRegistrationId();
+           
+           // Provider 별 데이터 추출
+           if (provider.equals("google")) {
+               email = (String) attributes.get("email");
+               name = (String) attributes.get("name");
+               picture = (String) attributes.get("picture");
+               socialId = (String) attributes.get("sub");
+           } else if (provider.equals("kakao")) {
+               Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+               Map<String, Object> kakaoProfile = (Map<String, Object>) kakaoAccount.get("profile");
+               email = (String) kakaoAccount.get("email");
+               name = (String) kakaoProfile.get("nickname");
+               picture = (String) kakaoProfile.get("profile_image_url");
+               socialId = String.valueOf(attributes.get("id"));
+           } else {
+               throw new OAuth2AuthenticationException("Unsupported provider: " + provider);
+           }
 
-       String email;
-       String name;
-       String picture;
-       String socialId;
-       String provider = userRequest.getClientRegistration().getRegistrationId();
+           // 필수 데이터 유효성 검사
+           if (email == null || socialId == null) {
+               log.error("Essential OAuth2 data missing - email: {}, socialId: {}", email, socialId);
+               throw new OAuth2AuthenticationException("Essential OAuth2 data missing");
+           }
 
-       if (provider.equals("google")) {
-           email = (String) attributes.get("email");
-           name = (String) attributes.get("name");
-           picture = (String) attributes.get("picture");
-           socialId = (String) attributes.get("sub");
-       } else if (provider.equals("kakao")) {
-           Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-           Map<String, Object> kakaoProfile = (Map<String, Object>) kakaoAccount.get("profile");
+           log.info("Processing OAuth2 login - email: {}, socialId: {}, provider: {}", 
+               email, socialId, provider);
 
-           email = (String) kakaoAccount.get("email");
-           name = (String) kakaoProfile.get("nickname");
-           picture = (String) kakaoProfile.get("profile_image_url");
-           socialId = String.valueOf(attributes.get("id"));
-       } else {
-           throw new OAuth2AuthenticationException("Unsupported provider: " + provider);
-       }
+           // 사용자 조회 또는 생성
+           SocialEntity socialEntity = socialRepository.findBySocialId(socialId)
+               .map(entity -> {
+                   log.info("Updating existing user - socialId: {}", socialId);
+                   entity.updateOAuthInfo(
+                       name, 
+                       picture, 
+                       AuthProvider.valueOf(provider.toUpperCase())
+                   );
+                   return entity;
+               })
+               .orElseGet(() -> {
+                   log.info("Creating new user - socialId: {}", socialId);
+                   return SocialEntity.builder()
+                       .email(email)
+                       .name(name)
+                       .picture(picture)
+                       .socialId(socialId)
+                       .authProvider(AuthProvider.valueOf(provider.toUpperCase()))
+                       .createdAt(LocalDateTime.now().toString())
+                       .build();
+               });
 
-       SocialEntity socialEntity = socialRepository.findByEmailAndAuthProvider(
-               email, 
-               AuthProvider.valueOf(provider.toUpperCase())
-           )
-           .map(entity -> {
-               entity.updateOAuthInfo(
-                   name, 
-                   picture, 
-                   AuthProvider.valueOf(provider.toUpperCase())
-               );
-               return entity;
-           })
-           .orElse(SocialEntity.builder()
-               .email(email)
-               .name(name)
-               .picture(picture)
-               .socialId(socialId)
-               .authProvider(AuthProvider.valueOf(provider.toUpperCase()))
-               .createdAt(LocalDateTime.now().toString())
-               .build());
+           // 저장 및 로깅
+           log.info("Before save - socialEntity: {}", socialEntity);
+           socialEntity = socialRepository.save(socialEntity);
+           log.info("After save - socialEntity: {}", socialEntity);
 
-       socialEntity = socialRepository.save(socialEntity);
-       log.info("OAuth2 user processed - email: {}, provider: {}", email, provider);
-
-       return new CustomOAuth2User(socialEntity, attributes);
+           return new CustomOAuth2User(socialEntity, attributes);
+           
+       } catch (Exception e) {
+    	    log.error("Error during OAuth2 authentication", e);
+    	    throw new OAuth2AuthenticationException(new OAuth2Error("authentication_error"), e);
+    	}
    }
 }
