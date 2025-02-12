@@ -51,6 +51,10 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService {
            } else {
                throw new OAuth2AuthenticationException("Unsupported provider: " + provider);
            }
+           
+           // 공통로그추가
+           log.info("Final user data - provider: {}, socialId: {}, email: {}, name: {}", 
+        		    provider, socialId, email, name);
 
            // 필수 데이터 유효성 검사
            if (email == null || socialId == null) {
