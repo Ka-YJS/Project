@@ -22,7 +22,7 @@ const OAuthLogIn = () => {
             localStorage.setItem('user', JSON.stringify(user));
             
             // 로그인 후 리다이렉트 또는 상태 업데이트
-            window.location.href = '/dashboard'; // 또는 원하는 페이지로 이동
+            window.location.href = '/main'; // 또는 원하는 페이지로 이동
         } catch (error) {
             console.error('Google login failed:', error);
             alert('로그인에 실패했습니다.');
@@ -57,7 +57,7 @@ const OAuthLogIn = () => {
                     localStorage.setItem('user', JSON.stringify(user));
                     
                     // 로그인 후 리다이렉트 또는 상태 업데이트
-                    window.location.href = '/dashboard';
+                    window.location.href = '/main';
                 } catch (error) {
                     console.error('Kakao login failed:', error);
                     alert('카카오 로그인에 실패했습니다.');
