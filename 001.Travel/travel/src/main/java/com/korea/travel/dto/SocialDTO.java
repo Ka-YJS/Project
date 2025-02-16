@@ -53,9 +53,14 @@ public class SocialDTO {
             Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
             Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
             
+            // email은 null일 수 있으므로 안전하게 처리
+            String email = kakaoAccount.containsKey("email") ? 
+                          (String) kakaoAccount.get("email") : 
+                          null;
+            
             return dto.builder()
                     .name((String) profile.get("nickname"))
-                    .email((String) kakaoAccount.get("email"))
+                    .email(email) // null일 수 있음
                     .picture((String) profile.get("profile_image_url"))
                     .socialId(String.valueOf(attributes.get("id")))
                     .attributes(attributes)
