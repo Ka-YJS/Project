@@ -35,7 +35,7 @@ public class SocialEntity {
     @Column(nullable = false)
     private String name;          // 소셜 계정 이름
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String email;         // 소셜 이메일
     
     @Column
