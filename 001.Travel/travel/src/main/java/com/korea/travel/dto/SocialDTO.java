@@ -59,9 +59,9 @@ public class SocialDTO {
                           null;
             
             return dto.builder()
-                    .name((String) profile.get("nickname"))
+                    .name((String) profile.get("profile_nickname"))
                     .email(email) // null일 수 있음
-                    .picture((String) profile.get("profile_image_url"))
+                    .picture((String) profile.get("profile_image"))
                     .socialId(String.valueOf(attributes.get("id")))
                     .attributes(attributes)
                     .nameAttributeKey(userNameAttributeName)
