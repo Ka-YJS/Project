@@ -5,6 +5,7 @@ import "../css/Strat.css";
 import config from "../Apikey";
 
 const OAuthLogIn = () => {
+    console.log("Google Client ID:", process.env.REACT_APP_GOOGLE_CLIENT_ID);
     // Google 로그인 성공 시 호출되는 함수
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
@@ -57,13 +58,17 @@ const OAuthLogIn = () => {
         window.Kakao.Auth.login({
             success: async (authObj) => {
                 try {
+                    // Kakao.API.request를 사용하여 사용자 정보 가져오기
+                    const userInfo = await window.Kakao.API.request({
+                    url: '/v2/user/me'
+                    });
                     // 백엔드로 인증 정보 전송
                     const response = await axios.post(
                         `http://${config.IP_ADD}/api/social/user`,
                         {
-                            socialId: authObj.id,
-                            name: authObj.properties.nickname,
-                            picture: authObj.properties.profile_image,
+                            socialId: userInfo.id,
+                            name: userInfo.kakao_account.profile.profile_nickname,
+                            picture: userInfo.kakao_account.profile.profile_image,
                             authProvider: 'KAKAO',
                             role: 'USER'
                         },
