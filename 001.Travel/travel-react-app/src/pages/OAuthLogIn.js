@@ -9,12 +9,23 @@ const OAuthLogIn = () => {
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
             // 백엔드로 토큰 전송
-            const response = await axios.post(`http://${config.IP_ADD}/api/social/user`, {
-                socialId: credentialResponse.sub,
-                name: credentialResponse.name,
-                email: credentialResponse.email,
-                picture: credentialResponse.picture
-            });
+            const response = await axios.post(
+                `http://${config.IP_ADD}/api/social/user`,
+                {
+                    socialId: credentialResponse.sub,
+                    name: credentialResponse.name,
+                    email: credentialResponse.email,
+                    picture: credentialResponse.picture,
+                    authProvider: 'GOOGLE',  // 필수 필드 추가
+                    role: 'USER'            // 필수 필드 추가
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    withCredentials: true
+                }
+            );
             
             // 로그인 성공 처리
             const { accessToken, user } = response.data;
@@ -47,9 +58,22 @@ const OAuthLogIn = () => {
             success: async (authObj) => {
                 try {
                     // 백엔드로 인증 정보 전송
-                    const response = await axios.post('/api/social/user', {
-                        access_token: authObj.access_token
-                    });
+                    const response = await axios.post(
+                        `http://${config.IP_ADD}/api/social/user`,
+                        {
+                            socialId: authObj.id,
+                            name: authObj.properties.nickname,
+                            picture: authObj.properties.profile_image,
+                            authProvider: 'KAKAO',
+                            role: 'USER'
+                        },
+                        {
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            withCredentials: true
+                        }
+                    );
                     
                     // 로그인 성공 처리
                     const { accessToken, user } = response.data;
