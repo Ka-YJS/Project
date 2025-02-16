@@ -1,7 +1,10 @@
 package com.korea.travel.model;
 
-import org.springframework.context.annotation.Role;
+import java.time.LocalDateTime;
+
 import com.korea.travel.security.SocialRole;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -10,7 +13,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -93,6 +95,10 @@ public class SocialEntity {
         if (role == null) {
             role = SocialRole.USER;
             log.info("Setting default role for new user: {}", role);
+        }
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now().toString();
+            log.info("Setting creation time: {}", createdAt);
         }
         log.info("Creating new social entity - socialId: {}, name: {}, email: {}", 
                 socialId, name, email);
