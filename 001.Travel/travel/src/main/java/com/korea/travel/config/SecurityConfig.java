@@ -38,7 +38,6 @@ public class SecurityConfig {
                    "/travel/oauth2/google/callback",
                    "/travel/email/**",
                    "/social/**",  // OAuth2 엔드포인트도 /social로 통일
-                   "/api/**",
                    "/api/social/**",
                    "/login/oauth2/code/google",
                    "/static/**"
@@ -74,7 +73,7 @@ public class SecurityConfig {
    @Bean
    public CorsConfigurationSource corsConfigurationSource() {
        CorsConfiguration configuration = new CorsConfiguration();
-       configuration.setAllowedOrigins(Arrays.asList("http://todo-test-dev.store", "https://todo-test-dev.store", "http://localhost:3000", "http://localhost:9090"));
+       configuration.setAllowedOrigins(Arrays.asList("http://todo-test-dev.store", "https://todo-test-dev.store", "http://localhost:3000"));
        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
        configuration.setAllowedHeaders(Arrays.asList("*"));
        configuration.setAllowCredentials(true);
