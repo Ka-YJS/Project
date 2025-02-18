@@ -18,17 +18,22 @@ public class SocialController {
     // 소셜 사용자 정보 저장/업데이트
     @PostMapping("/user")
     public ResponseEntity<SocialEntity> saveOrUpdateUser(@RequestBody SocialDTO.dto socialDTO) {
-       log.info("=== Starting saveOrUpdateUser ===");
-       log.info("Received socialDTO: {}", socialDTO);
-       
-       try {
-           SocialEntity result = socialService.saveOrUpdate(socialDTO);
-           log.info("Successfully saved/updated user: {}", result);
-           return ResponseEntity.ok(result);
-       } catch (Exception e) {
-           log.error("Error in saveOrUpdateUser: ", e);
-           throw e;
-       }
+        log.info("=== Starting saveOrUpdateUser ===");
+        log.info("Received socialDTO: {}", socialDTO);
+        
+        // 필수 필드 검증 추가
+        if (socialDTO.getName() == null || socialDTO.getSocialId() == null) {
+            throw new IllegalArgumentException("Name and socialId are required fields");
+        }
+        
+        try {
+            SocialEntity result = socialService.saveOrUpdate(socialDTO);
+            log.info("Successfully saved/updated user: {}", result);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error in saveOrUpdateUser: ", e);
+            throw e;
+        }
     }
     
     // 소셜 ID로 사용자 조회
