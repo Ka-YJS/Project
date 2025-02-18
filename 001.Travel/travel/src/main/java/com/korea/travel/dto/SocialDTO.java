@@ -11,7 +11,9 @@ import com.korea.travel.security.SocialRole;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class SocialDTO {
     
     @Getter
@@ -25,6 +27,16 @@ public class SocialDTO {
         private String socialId;
         private String createdAt;
         private AuthProvider authProvider;
+        
+        @Override
+        public String toString() {
+            return "SocialDTO{" +
+                "socialId='" + socialId + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", picture='" + picture + '\'' +
+                '}';
+        }
 
         public static dto of(String registrationId, 
                            String userNameAttributeName,
@@ -36,6 +48,17 @@ public class SocialDTO {
 
         private static dto ofGoogle(String userNameAttributeName,
                                   Map<String, Object> attributes) {
+        	
+        	System.out.println("Google OAuth Response: " + attributes);
+        	
+        	// 각 속성값 로깅
+            log.info("Creating Google DTO with attributes:");
+            log.info("name: {}", attributes.get("name"));
+            log.info("email: {}", attributes.get("email"));
+            log.info("picture: {}", attributes.get("picture"));
+            log.info("sub: {}", attributes.get("sub"));
+        	
+        	
             return dto.builder()
                     .name((String) attributes.get("name"))
                     .email((String) attributes.get("email"))
