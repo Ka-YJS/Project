@@ -1,46 +1,36 @@
 import React from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import "../css/Strat.css";
 import config from "../Apikey";
 
 const OAuthLogIn = () => {
-    console.log("Google Client ID:", process.env.REACT_APP_GOOGLE_CLIENT_ID);
     // Google 로그인 성공 시 호출되는 함수
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
 
-            // 1. 먼저 Google의 userinfo endpoint로 사용자 정보를 가져옵니다
-        const userInfoResponse = await axios.get(
-            'https://www.googleapis.com/oauth2/v3/userinfo',
-            {
-                headers: {
-                    'Authorization': `Bearer ${credentialResponse.credential}`
-                }
-            }
-        );
-        
-        const userInfo = userInfoResponse.data;
+            // credentialResponse.credential은 JWT 형태의 ID 토큰입니다
+            const decoded = jwtDecode(credentialResponse.credential)
 
-            // 백엔드로 토큰 전송
-            // 2. 백엔드로 사용자 정보 전송
-        const response = await axios.post(
-            `http://${config.IP_ADD}/api/social/user`,
-            {
-                socialId: userInfo.sub,
-                name: userInfo.name,
-                email: userInfo.email,
-                picture: userInfo.picture,
-                authProvider: 'GOOGLE',
-                role: 'USER'
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json'
+            // 백엔드로 사용자 정보 전송
+            const response = await axios.post(
+                `http://${config.IP_ADD}/api/social/user`,
+                {
+                    socialId: decoded.sub,
+                    name: decoded.name,
+                    email: decoded.email,
+                    picture: decoded.picture,
+                    authProvider: 'GOOGLE',
+                    role: 'USER'
                 },
-                withCredentials: true
-            }
-        );
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    withCredentials: true
+                }
+            );
             
             // 로그인 성공 처리
             const { accessToken, user } = response.data;
@@ -76,6 +66,10 @@ const OAuthLogIn = () => {
                     const userInfo = await window.Kakao.API.request({
                     url: '/v2/user/me'
                     });
+
+                    console.log("Kakao user info:", userInfo);
+                    console.log("Profile:", userInfo.kakao_account?.profile);
+
                     // 백엔드로 인증 정보 전송
                     const response = await axios.post(
                         `http://${config.IP_ADD}/api/social/user`,
@@ -86,6 +80,13 @@ const OAuthLogIn = () => {
                             authProvider: 'KAKAO',
                             role: 'USER'
                         },
+
+                        // 전송 전 데이터 확인을 위한 로그 추가
+                        console.log("Sending to backend:", {
+                            socialId: userInfo.id,
+                            name: userInfo.kakao_account.profile.profile_nickname
+                        }),
+
                         {
                             headers: {
                                 'Content-Type': 'application/json'
