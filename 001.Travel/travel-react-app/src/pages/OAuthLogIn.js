@@ -4,8 +4,13 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import "../css/Strat.css";
 import config from "../Apikey";
+import { useContext } from "react";
+import { UserContext } from "../context/UserContext";
 
 const OAuthLogIn = () => {
+
+    const { user, setUser } = useContext(UserContext);
+
     // Google 로그인 성공 시 호출되는 함수
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
@@ -31,6 +36,25 @@ const OAuthLogIn = () => {
                     withCredentials: true
                 }
             );
+
+            // 응답 데이터 확인
+            console.log('Server Response:', response.data);
+        
+        // Session 정보를 user 객체로 저장
+        const userData = {
+            userNickName: response.data.name,
+            id: response.data.socialId,
+            email: response.data.email,
+            picture: response.data.picture,
+            authProvider: response.data.authProvider
+        };
+        
+        // Context 업데이트
+        // UserContext의 setUser 함수 사용
+        setUser(userData);  // UserContext에서 제공하는 setUser 함수 필요
+        
+        // localStorage에 저장
+        localStorage.setItem('user', JSON.stringify(userData));
             
             // 로그인 성공 처리
             const { accessToken, user } = response.data;
