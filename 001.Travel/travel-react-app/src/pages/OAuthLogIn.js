@@ -9,24 +9,38 @@ const OAuthLogIn = () => {
     // Google 로그인 성공 시 호출되는 함수
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
-            // 백엔드로 토큰 전송
-            const response = await axios.post(
-                `http://${config.IP_ADD}/api/social/user`,
-                {
-                    socialId: credentialResponse.sub,
-                    name: credentialResponse.name,
-                    email: credentialResponse.email,
-                    picture: credentialResponse.picture,
-                    authProvider: 'GOOGLE',  // 필수 필드 추가
-                    role: 'USER'            // 필수 필드 추가
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    withCredentials: true
+
+            // 1. 먼저 Google의 userinfo endpoint로 사용자 정보를 가져옵니다
+        const userInfoResponse = await axios.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            {
+                headers: {
+                    'Authorization': `Bearer ${credentialResponse.credential}`
                 }
-            );
+            }
+        );
+        
+        const userInfo = userInfoResponse.data;
+
+            // 백엔드로 토큰 전송
+            // 2. 백엔드로 사용자 정보 전송
+        const response = await axios.post(
+            `http://${config.IP_ADD}/api/social/user`,
+            {
+                socialId: userInfo.sub,
+                name: userInfo.name,
+                email: userInfo.email,
+                picture: userInfo.picture,
+                authProvider: 'GOOGLE',
+                role: 'USER'
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true
+            }
+        );
             
             // 로그인 성공 처리
             const { accessToken, user } = response.data;
