@@ -61,6 +61,11 @@ public class TokenProvider {
 						.setSigningKey(secretKey)
 						.parseClaimsJws(token)
 						.getBody();
+				
+		        // 만료 체크
+		        if (claims.getExpiration().before(new Date())) {
+		            throw new RuntimeException("Token has expired");
+		        }
 				return claims.getSubject();
 			} catch (Exception e) {
 				throw new RuntimeException("Token validation failed",e);
