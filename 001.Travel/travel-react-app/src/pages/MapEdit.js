@@ -28,7 +28,7 @@ const MapEdit = () => {
     
 
     const { isLoaded, loadError } = useJsApiLoader({
-        googleMapsApiKey: process.env.REACT_APP_REACT_APP_GOOGLE_MAPS_API_KEY,
+        googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
         libraries: libraries,
         language:"ko"
     });
@@ -94,7 +94,7 @@ const MapEdit = () => {
     
 
     const getPhotoUrl = (photoReference) => {
-        return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${process.env.REACT_APP_REACT_APP_GOOGLE_MAPS_API_KEY}`;
+        return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
     };
 
     const handleAddToPlaceList = () => {
