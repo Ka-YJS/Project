@@ -29,7 +29,7 @@ const Map = () => {
 
     // Google Maps API 로드 상태
     const { isLoaded, loadError } = useJsApiLoader({
-        googleMapsApiKey: process.env.REACT_APP_REACT_APP_GOOGLE_MAPS_API_KEY,  // Google API 키
+        googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,  // Google API 키
         libraries: libraries,  // 사용할 라이브러리
         language:"ko",  // 언어 설정 (한국어)
     });
