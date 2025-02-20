@@ -47,19 +47,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	   if (token != null && token.startsWith("Bearer ")) {
 	       token = token.substring(7);
 	       try {
-	           String userId = tokenProvider.validateAndGetUserId(token);
-	           UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
-	           SecurityContextHolder.getContext().setAuthentication(authentication);
-	       } catch (Exception e) {
-	           response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-	           response.getWriter().write("Invalid or expired token");
-	           return;
-	       }
-	   } else {
-	       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-	       response.getWriter().write("Authorization header is missing or invalid");
-	       System.out.println("Authorization header is missing or invalid");
-	       return;
+	    	    String userId = tokenProvider.validateAndGetUserId(token);
+	    	    if (userId == null || userId.isEmpty()) {
+	    	        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+	    	        response.getWriter().write("Invalid user ID in token");
+	    	        return;
+	    	    }
+	    	    UsernamePasswordAuthenticationToken authentication = 
+	    	        new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
+	    	    SecurityContextHolder.getContext().setAuthentication(authentication);
+	    	} catch (Exception e) {
+	    	    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+	    	    response.getWriter().write("Token validation failed: " + e.getMessage());
+	    	    return;
+	    	}
 	   }
 	   filterChain.doFilter(request, response);
 	}
