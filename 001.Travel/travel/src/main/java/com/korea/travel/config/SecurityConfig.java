@@ -25,9 +25,6 @@ public class SecurityConfig {
 
    @Bean
    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-	   
-	   System.out.println("=== Security Configuration Loading ===");
-	   
        http
            .csrf(csrf -> csrf.disable())  // CSRF 보호 비활성화 (필요시 활성화)
            .authorizeHttpRequests(auth -> auth
