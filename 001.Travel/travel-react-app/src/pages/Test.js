@@ -87,7 +87,7 @@ const center = {
         <button onClick={() => {}}>검색</button>
    </div>
       <LoadScript
-        googleMapsApiKey= {process.env.REACT_APP_REACT_APP_GOOGLE_MAPS_API_KEY}
+        googleMapsApiKey= {process.env.REACT_APP_GOOGLE_MAPS_API_KEY}
       >
         <GoogleMap
           mapContainerStyle={containerStyle}
