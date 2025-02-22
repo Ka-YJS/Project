@@ -94,6 +94,12 @@ const OAuthLogIn = () => {
                     console.log("Kakao user info:", userInfo);
                     console.log("Profile:", userInfo.kakao_account?.profile);
 
+                    // 전송 전 데이터 확인을 위한 로그 추가
+                    console.log("Sending to backend:", {
+                        socialId: userInfo.id,
+                        name: userInfo.kakao_account.profile.profile_nickname
+                    })
+
                     // 백엔드로 인증 정보 전송
                     const response = await axios.post(
                         `http://${config.IP_ADD}/api/social/user`,
@@ -104,12 +110,6 @@ const OAuthLogIn = () => {
                             authProvider: 'KAKAO',
                             role: 'USER'
                         },
-
-                        // 전송 전 데이터 확인을 위한 로그 추가
-                        console.log("Sending to backend:", {
-                            socialId: userInfo.id,
-                            name: userInfo.kakao_account.profile.profile_nickname
-                        }),
 
                         {
                             headers: {
