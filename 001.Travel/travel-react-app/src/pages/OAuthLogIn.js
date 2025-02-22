@@ -14,8 +14,7 @@ const OAuthLogIn = () => {
     // Google 로그인 성공 시 호출되는 함수
     const handleGoogleSuccess = async (credentialResponse) => {
         try {
-
-            // credentialResponse.credential은 JWT 형태의 ID 토큰입니다
+            // JWT 토큰 디코딩
             const decoded = jwtDecode(credentialResponse.credential)
 
             // 백엔드로 사용자 정보 전송
@@ -40,40 +39,41 @@ const OAuthLogIn = () => {
             // 응답 데이터 확인
             console.log('Server Response:', response.data);
         
-        // Session 정보를 user 객체로 저장
-        const userData = {
-            userNickName: response.data.name,
-            id: response.data.socialId,
-            email: response.data.email,
-            picture: response.data.picture,
-            authProvider: response.data.authProvider
-        };
-        
-        // Context 업데이트
-        // UserContext의 setUser 함수 사용
-        setUser(userData);  // UserContext에서 제공하는 setUser 함수 필요
-        
-        // localStorage에 저장
-        localStorage.setItem('user', JSON.stringify(userData));
+            // Session 정보를 user 객체로 저장
+            const userData = {
+                name: response.data.name,
+                id: response.data.socialId,
+                email: response.data.email,
+                picture: response.data.picture,
+                authProvider: response.data.authProvider
+            };
             
-            // 로그인 성공 처리
-            const { accessToken, user } = response.data;
+            // Context 업데이트
+            setUser(userData);
+            
+            // accessToken과 user 정보 localStorage에 저장
+            const { accessToken } = response.data;
             localStorage.setItem('accessToken', accessToken);
-            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('user', JSON.stringify(userData));
             
-            // 로그인 후 리다이렉트 또는 상태 업데이트
-            window.location.href = '/main'; // 또는 원하는 페이지로 이동
+            // 로그인 후 리다이렉트
+            window.location.href = '/main';
         } catch (error) {
             console.error('Google login failed:', error);
+            // axios 에러인 경우 응답 데이터도 로깅
+            if (error.response) {
+                console.error('Server error response:', error.response.data);
+                console.error('Status:', error.response.status);
+            }
             alert('로그인에 실패했습니다.');
         }
     };
 
-    // Google 로그인 실패 시 호출되는 함수
-    const handleGoogleError = () => {
-        console.error('Google login failed');
-        alert('구글 로그인에 실패했습니다.');
-    };
+        // Google 로그인 실패 시 호출되는 함수
+        const handleGoogleError = () => {
+            console.error('Google login failed');
+            alert('구글 로그인에 실패했습니다.');
+        };
 
     // 카카오 로그인
     const handleKakaoLogin = () => {
@@ -95,22 +95,20 @@ const OAuthLogIn = () => {
                     console.log("Profile:", userInfo.kakao_account?.profile);
 
                     // 전송 전 데이터 확인을 위한 로그 추가
-                    console.log("Sending to backend:", {
-                        socialId: userInfo.id,
-                        name: userInfo.kakao_account.profile.profile_nickname
-                    })
+                    console.log("전체 카카오 응답:", JSON.stringify(userInfo, null, 2));
+                    console.log("카카오 계정:", JSON.stringify(userInfo.kakao_account, null, 2));
+                    console.log("프로필:", JSON.stringify(userInfo.kakao_account?.profile, null, 2));
 
                     // 백엔드로 인증 정보 전송
                     const response = await axios.post(
                         `http://${config.IP_ADD}/api/social/user`,
                         {
                             socialId: userInfo.id,
-                            name: userInfo.kakao_account.profile.profile_nickname,
-                            picture: userInfo.kakao_account.profile.profile_image,
+                            name: userInfo.kakao_account.profile.profile_nickname,  // profile_nickname으로 수정
+                            picture: userInfo.kakao_account.profile.profile_image,  // profile_image로 수정
                             authProvider: 'KAKAO',
                             role: 'USER'
                         },
-
                         {
                             headers: {
                                 'Content-Type': 'application/json'
@@ -118,16 +116,35 @@ const OAuthLogIn = () => {
                             withCredentials: true
                         }
                     );
+
+                    // Session 정보를 user 객체로 저장
+                    const userData = {
+                        name: response.data.name,
+                        id: response.data.socialId,
+                        picture: response.data.picture,
+                        authProvider: response.data.authProvider
+                    };
+                    
+                    // Context 업데이트
+                    setUser(userData);
                     
                     // 로그인 성공 처리
-                    const { accessToken, user } = response.data;
+                    // accessToken과 user 정보 localStorage에 저장
+                    const { accessToken } = response.data;
                     localStorage.setItem('accessToken', accessToken);
-                    localStorage.setItem('user', JSON.stringify(user));
+                    localStorage.setItem('user', JSON.stringify(userData));  // userData로 통일
                     
                     // 로그인 후 리다이렉트 또는 상태 업데이트
                     window.location.href = '/main';
                 } catch (error) {
                     console.error('Kakao login failed:', error);
+                    
+                    // axios 에러인 경우 응답 데이터도 로깅
+                    if (error.response) {
+                        console.error('Server error response:', error.response.data);
+                        console.error('Status:', error.response.status);
+                    }
+
                     alert('카카오 로그인에 실패했습니다.');
                 }
             },
@@ -135,7 +152,7 @@ const OAuthLogIn = () => {
                 console.error('Kakao login failed:', err);
                 alert('카카오 로그인에 실패했습니다.');
             },
-            scope: 'profile_nickname, profile_image' // 필요한 scope 추가
+            scope: ['profile_nickname', 'profile_image'] // 필요한 scope 추가
         });
     };
 
