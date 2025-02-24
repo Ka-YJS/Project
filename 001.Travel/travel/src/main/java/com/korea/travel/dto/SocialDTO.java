@@ -73,8 +73,29 @@ public class SocialDTO {
         
         private static dto ofKakao(String userNameAttributeName,
                                  Map<String, Object> attributes) {
+        	
+        	log.info("Kakao full response: {}", attributes);
+        	
             Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
             Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+            
+            // nickname 값 가져오기 - 여러 가능한 필드명 시도
+            String nickname = null;
+            if (profile.containsKey("nickname")) {
+                nickname = (String) profile.get("nickname");
+            } else if (profile.containsKey("profile_nickname")) {
+                nickname = (String) profile.get("profile_nickname");
+            }
+            
+            // 프로필 이미지 URL 가져오기 - 여러 가능한 필드명 시도
+            String profileImageUrl = null;
+            if (profile.containsKey("profile_image_url")) {
+                profileImageUrl = (String) profile.get("profile_image_url");
+            } else if (profile.containsKey("profile_image")) {
+                profileImageUrl = (String) profile.get("profile_image");
+            }
+            
+            log.info("Extracted nickname: {}, profile image: {}", nickname, profileImageUrl);
             
             // email은 null일 수 있으므로 안전하게 처리
             String email = kakaoAccount.containsKey("email") ? 
