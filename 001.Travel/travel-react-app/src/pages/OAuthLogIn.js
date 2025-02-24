@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
@@ -10,6 +10,13 @@ import { UserContext } from "../context/UserContext";
 const OAuthLogIn = () => {
 
     const { user, setUser } = useContext(UserContext);
+
+    useEffect(() => {
+        // Kakao SDK 초기화
+        if (!window.Kakao.isInitialized()) {
+            window.Kakao.init(process.env.REACT_APP_KAKAO_KEY);
+        }
+    }, []);
 
     // Google 로그인 성공 시 호출되는 함수
     const handleGoogleSuccess = async (credentialResponse) => {
@@ -152,7 +159,7 @@ const OAuthLogIn = () => {
                 console.error('Kakao login failed:', err);
                 alert('카카오 로그인에 실패했습니다.');
             },
-            scope: ['profile_nickname', 'profile_image'] // 필요한 scope 추가
+            scope: 'profile_nickname,profile_image' // 필요한 scope 추가
         });
     };
 
