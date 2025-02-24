@@ -111,8 +111,8 @@ const OAuthLogIn = () => {
                         `http://${config.IP_ADD}/api/social/user`,
                         {
                             socialId: userInfo.id,
-                            name: userInfo.kakao_account.profile.profile_nickname,  // profile_nickname으로 수정
-                            picture: userInfo.kakao_account.profile.profile_image,  // profile_image로 수정
+                            name: userInfo.kakao_account.profile.nickname,
+                            picture: userInfo.kakao_account.profile.profile_image_url,
                             authProvider: 'KAKAO',
                             role: 'USER'
                         },
