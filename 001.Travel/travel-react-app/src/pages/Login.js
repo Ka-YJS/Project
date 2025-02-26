@@ -259,9 +259,23 @@ const Login = () => {
       //로그인 call 메서드
       const response = await call("/travel/login","POST",userProfile,user)
 
-      if(response){
-        setUser(response);
-        console.log("로그인 call 메서드 response:"+response);
+      if (response) {
+        // 통합된 형식으로 사용자 정보 변환
+        const userData = {
+          id: response.userId,
+          name: response.userName,
+          nickName: response.userNickName,
+          email: response.userId, // 이메일이 아이디로 사용됨
+          picture: response.userProfileImage || null, // 프로필 이미지 (없을 경우 null)
+          authProvider: 'NORMAL', // 일반 로그인 표시
+          phoneNumber: response.userPhoneNumber
+        };
+        
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('accessToken', response.token); // 토큰이 있다면 저장
+        
+        console.log("로그인 call 메서드 response:", response);
         alert(`로그인 성공! 환영합니다, ${response.userNickName}님!`);
         navigate("/main")
       }
