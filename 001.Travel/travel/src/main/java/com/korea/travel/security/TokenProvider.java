@@ -51,6 +51,36 @@ public class TokenProvider {
 		return jwt;
 	}
 	
+	// OAuth2 사용자를 위한 새로운 토큰 생성 메서드
+		public String createToken(String socialId, String email, String role) {
+			// JWT Header
+			Map<String, Object> header = new HashMap<>();
+			header.put("typ", "JWT");
+			
+			// 토큰의 유효기간 설정 (3시간 - 기존과 동일)
+			Long expTime = 1000*60L*180L;
+			Date ext = new Date();
+			ext.setTime(ext.getTime() + expTime);
+			
+			// payload를 담을 Map
+			Map<String, Object> claims = new HashMap<>();
+			claims.put("socialId", socialId);
+			claims.put("role", role);
+			
+			// jwt 생성 (기존 구조와 동일하게 유지)
+			String jwt = Jwts.builder()
+					.setHeader(header)
+					.setClaims(claims)  // 추가 정보 담기
+					.signWith(SignatureAlgorithm.HS512, secretKey)
+					.setSubject(email != null ? email : socialId)  // 이메일이 있으면 이메일을, 없으면 socialId를 subject로
+					.setIssuer("travel app")
+					.setIssuedAt(new Date())
+					.setExpiration(ext)
+					.compact();
+					
+			return jwt;
+		}
+	
 	
 	//JWT 토큰 검증 및 유저 id 반환
 	public String validateAndGetUserId(String token) {
