@@ -11,6 +11,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.korea.travel.oauth.CustomOAuth2User;
 import com.korea.travel.oauth.CustomOAuth2UserServiceImpl;
 import com.korea.travel.security.JwtAuthenticationFilter;
 import com.korea.travel.security.TokenProvider;
@@ -50,6 +52,20 @@ public class SecurityConfig {
                .successHandler((request, response, authentication) -> {
                    // JWT 토큰 생성 및 쿠키/헤더 설정
                    // 프론트엔드로 리다이렉트
+            	   
+            	// CustomOAuth2User에서 정보 추출
+                   CustomOAuth2User oAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+                   String socialId = oAuth2User.getSocialId();
+                   String email = oAuth2User.getEmail();
+                   
+                   // 사용자 정보와 함께 토큰 생성
+                   String token = tokenProvider.createToken(socialId, email, oAuth2User.getRoleKey());
+                   
+                   // 토큰을 헤더에 추가
+                   response.setHeader("Authorization", "Bearer " + token);
+                   
+                   // 프론트엔드로 리다이렉트
+                   response.sendRedirect("http://localhost:3000/oauth2/redirect?token=" + token);
                })
            )//oauth2Login
            .cors(cors -> cors.configurationSource(corsConfigurationSource()))  //CORS 설정 활성화
