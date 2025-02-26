@@ -48,11 +48,13 @@ const OAuthLogIn = () => {
         
             // Session 정보를 user 객체로 저장
             const userData = {
-                name: response.data.name,
                 id: response.data.socialId,
-                email: response.data.email,
-                picture: response.data.picture,
-                authProvider: response.data.authProvider
+            name: response.data.name,
+            nickName: response.data.name, // 소셜 로그인은 이름을 닉네임으로 사용
+            email: response.data.email,
+            picture: response.data.picture,
+            authProvider: 'GOOGLE',
+            phoneNumber: null // 소셜 로그인은 전화번호 없음
             };
             
             // Context 업데이트
@@ -112,7 +114,8 @@ const OAuthLogIn = () => {
                         {
                             socialId: userInfo.id,
                             name: userInfo.kakao_account.profile.nickname,
-                            picture: userInfo.kakao_account.profile.profile_image_url,
+                        email: userInfo.kakao_account.email || `kakao_${userInfo.id}@kakao.com`,
+                        picture: userInfo.kakao_account.profile.profile_image_url,
                             authProvider: 'KAKAO',
                             role: 'USER'
                         },
@@ -126,10 +129,13 @@ const OAuthLogIn = () => {
 
                     // Session 정보를 user 객체로 저장
                     const userData = {
-                        name: response.data.name,
                         id: response.data.socialId,
+                        name: response.data.name,
+                        nickName: response.data.name, // 소셜 로그인은 이름을 닉네임으로 사용
+                        email: response.data.email,
                         picture: response.data.picture,
-                        authProvider: response.data.authProvider
+                        authProvider: 'KAKAO',
+                        phoneNumber: null // 소셜 로그인은 전화번호 없음
                     };
                     
                     // Context 업데이트
