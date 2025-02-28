@@ -90,26 +90,49 @@ const TopIcon = ({text}) => {
     return "일반";
   };
 
-  //로그아웃 버튼
-  const handleLogout = () => {
+  // 로그아웃 버튼
+const handleLogout = () => {
+  try {
+    // 프로필 드롭다운과 내 정보 상태 초기화
+    setIsProfileDropdownVisible(false);
+    setIsMyInfoVisible(false);
+    
     // 소셜 로그인인 경우 추가 로그아웃 처리
     const authProvider = getAuthProvider();
     
     if (authProvider === 'KAKAO' && window.Kakao?.Auth) {
-      if (window.Kakao.Auth.getAccessToken()) {
-        window.Kakao.Auth.logout(() => {
-          console.log('카카오 로그아웃 완료');
-        });
+      try {
+        if (window.Kakao.Auth.getAccessToken()) {
+          window.Kakao.Auth.logout(() => {
+            console.log('카카오 로그아웃 완료');
+          });
+        }
+      } catch (error) {
+        console.error('카카오 로그아웃 중 오류:', error);
+        // 카카오 로그아웃 실패해도 계속 진행
       }
+    } else if (authProvider === 'GOOGLE') {
+      // 구글 로그아웃은 특별한 처리 없이 토큰 제거만으로 가능
+      console.log('구글 로그아웃 완료');
     }
     
     // 공통 로그아웃 처리
     localStorage.clear();
-    setUser(null); // UserContext 초기화
-    console.log("로그아웃 완료");
-    alert("로그아웃 되었습니다.");
+    
+    // UserContext 초기화 (비동기 처리를 위해 setTimeout 사용)
+    setTimeout(() => {
+      setUser(null);
+      console.log("로그아웃 완료");
+      alert("로그아웃 되었습니다.");
+      navigate('/login');
+    }, 0);
+  } catch (error) {
+    console.error('로그아웃 처리 중 오류 발생:', error);
+    alert("로그아웃 중 오류가 발생했습니다. 페이지를 새로고침 해주세요.");
+    // 오류 발생해도 로그인 페이지로 이동
     navigate('/login');
-  };
+  }
+};
 
   return (
     <header
