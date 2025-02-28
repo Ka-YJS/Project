@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { TextField, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { ListContext } from "../context/ListContext";
@@ -9,17 +9,58 @@ import '../css/Map.css';  // Map.css 파일을 import
 import config from "../Apikey";
 
 const Write = () => {
-    const {user} = useContext(UserContext)
-    const {list} = useContext(ListContext)
+    const {user} = useContext(UserContext);
+    const {list} = useContext(ListContext);
     const [postTitle, setPostTitle] = useState("");
     const [postContent, setPostContent] = useState("");
     const [selectedFiles, setSelectedFiles] = useState([]); // 사용자가 선택한 파일들
     const [previewUrls, setPreviewUrls] = useState([]); // 미리보기 URL들
+    const [isSocialLogin, setIsSocialLogin] = useState(false); // 소셜 로그인 여부
     const navigate = useNavigate();
 
-    //상태 변수
-   
+    // 컴포넌트 마운트 시 소셜 로그인 여부 확인
+    useEffect(() => {
+        if (user) {
+            // authProvider가 있으면 소셜 로그인으로 판단
+            const socialLoginCheck = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
+            setIsSocialLogin(socialLoginCheck);
+            console.log("소셜 로그인 여부:", socialLoginCheck);
+            console.log("현재 사용자 정보:", user);
+        }
+    }, [user]);
 
+    // 사용자 닉네임 가져오기 (소셜/일반 로그인 모두 지원)
+    const getUserNickName = () => {
+        if (!user) return "게스트";
+        // 소셜 로그인 닉네임
+        if (user.nickName) return user.nickName;
+        if (user.name) return user.name;
+        // 일반 로그인 닉네임
+        if (user.userNickName) return user.userNickName;
+        return "알 수 없는 사용자";
+    };
+
+    // 사용자 ID 가져오기
+    const getUserId = () => {
+        if (!user) return null;
+        // 소셜 로그인 ID
+        if (user.id) return user.id;
+        // 일반 로그인 ID
+        if (user.userid) return user.userid;
+        return null;
+    };
+
+    // 토큰 가져오기
+    const getAuthToken = () => {
+        if (!user) return null;
+        // 소셜 로그인 토큰
+        if (user.accessToken) return user.accessToken;
+        // 일반 로그인 토큰
+        if (user.token) return user.token;
+        
+        // localStorage에서 토큰 확인
+        return localStorage.getItem('accessToken');
+    };
 
     //파일 추가 핸들러
     const handleAddImages = async (e) => {
@@ -37,16 +78,19 @@ const Write = () => {
         setPreviewUrls((prevUrls) => [...prevUrls, ...newPreviews]);
     };
 
-
     //이미지 삭제 핸들러
     const handleDeleteImage = (index) => {
         setSelectedFiles((prevFiles) => prevFiles.filter((_, idx) => idx !== index));
         setPreviewUrls((prevUrls) => prevUrls.filter((_, idx) => idx !== index));
     };
 
-
     //저장 버튼 핸들러
     const handleSave = async () => {
+        if (!user) {
+            alert("로그인이 필요합니다.");
+            navigate("/login");
+            return;
+        }
 
         if (!postTitle || !postContent) {
             alert("제목과 내용을 모두 입력해주세요.");
@@ -66,24 +110,40 @@ const Write = () => {
     
         //FormData 생성 및 전송
         const formData = new FormData();
+        const userId = getUserId();
+        const userNickName = getUserNickName();
+        const token = getAuthToken();
 
         formData.append("postTitle", postTitle);
         formData.append("postContent", postContent);
-        formData.append("userNickName", user.userNickName);
+        formData.append("userNickName", userNickName);
         formData.append("placeList", list.join(", "));
         selectedFiles.forEach((file) => formData.append("files", file));
     
         try {
+            // 폼 데이터 로깅 (디버깅용)
             for (let [key, value] of formData.entries()) {
                 console.log(key, value);
             }
-            console.log(user.token);
-            const response = await axios.post(`http://${config.IP_ADD}/travel/write/${user.id}`, formData, {
-                headers: { 
-                    "Content-Type": "multipart/form-data" ,
-                    Authorization: `Bearer ${user.token}`,
-                    Accept: '*/*'
-            },
+            console.log("사용자 ID:", userId);
+            console.log("사용자 토큰:", token);
+            
+            // API 엔드포인트 확인
+            const endpoint = `http://${config.IP_ADD}/travel/write/${userId}`;
+            console.log("API 엔드포인트:", endpoint);
+            
+            // 헤더 설정
+            const headers = {
+                "Content-Type": "multipart/form-data"
+            };
+            
+            // 토큰이 있으면 Authorization 헤더 추가
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
+            
+            const response = await axios.post(endpoint, formData, {
+                headers: headers,
                 withCredentials: true
             });
 
@@ -91,11 +151,17 @@ const Write = () => {
             alert("글이 저장되었습니다!");
             navigate("/PostDetail/" + response.data.postId);
         } catch (error) {
-            console.error("Error saving post:", error.response || error.message);
+            console.error("Error saving post:", error);
             alert("저장 중 오류가 발생했습니다.");
             if (error.response) {
                 console.log("Response Data:", error.response.data);
                 console.log("Response Status:", error.response.status);
+                
+                // 토큰 오류인 경우
+                if (error.response.status === 403 && error.response.data.includes("Token validation failed")) {
+                    alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
+                    navigate("/login");
+                }
             }
         }
     };
@@ -112,7 +178,6 @@ const Write = () => {
 
     return (
         <div className="write">
-
             {/* 제목 입력 */}
             <div>
                 <TextField
@@ -122,7 +187,6 @@ const Write = () => {
                     value={postTitle}
                     onChange={(e) => {setPostTitle(e.target.value)}}
                     placeholder="제목을 입력하세요."
-                    
                 />
             </div>
 
@@ -133,7 +197,7 @@ const Write = () => {
                     label="작성자"
                     fullWidth
                     variant="outlined"
-                    value={user.userNickName || "알 수 없는 사용자"}
+                    value={getUserNickName()}
                 />
             </div>
 
