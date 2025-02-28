@@ -15,14 +15,32 @@ import config from "../Apikey";
 const TopIcon = ({text}) => {
   const [isProfileDropdownVisible, setIsProfileDropdownVisible] = useState(false);
   const [isMyInfoVisible, setIsMyInfoVisible] = useState(false); // Collapse 상태 관리
-  const { user } = useContext(UserContext); // userNickName 가져오기
+  const { user, setUser } = useContext(UserContext); // user 정보와 setter 가져오기
   const navigate = useNavigate();
 
+  // 컴포넌트 마운트 시 localStorage에서 사용자 정보 확인
   useEffect(() => {
-    if (user?.userProfileImage) {
-      console.log("프로필 경로" + user.userProfileImage);
+    // localStorage에서 사용자 정보 확인
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedUser && (!user || Object.keys(user).length === 0)) {
+      // Context에 사용자 정보가 없을 경우 localStorage에서 복원
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        console.log("사용자 정보 복원:", parsedUser);
+      } catch (error) {
+        console.error("사용자 정보 파싱 오류:", error);
+      }
     }
-  },[]);
+  }, []);
+
+  // 사용자 정보 확인용 로그
+  useEffect(() => {
+    if (user) {
+      console.log("현재 사용자 정보:", user);
+    }
+  }, [user]);
 
   const iconComponents = [
     { id: "home", component: <SlHome size={23} />, route: "/main", label: "홈"},
@@ -30,11 +48,65 @@ const TopIcon = ({text}) => {
     { id: "post", component: <LuNotebook  size={25} />, route: "/post",label: "기록일지" },
   ];
 
+  // 사용자 ID 가져오기 (소셜/일반 로그인 모두 지원)
+  const getUserId = () => {
+    if (!user) return null;
+    // 소셜 로그인 ID
+    if (user.id) return user.id;
+    // 일반 로그인 ID
+    if (user.userid) return user.userid;
+    return null;
+  };
   
+  // 사용자 닉네임 가져오기 (소셜/일반 로그인 모두 지원)
+  const getUserNickName = () => {
+    if (!user) return "게스트";
+    // 소셜 로그인 닉네임
+    if (user.nickName) return user.nickName;
+    if (user.name) return user.name;
+    // 일반 로그인 닉네임
+    if (user.userNickName) return user.userNickName;
+    if (user.username) return user.username;
+    return "게스트";
+  };
+
+  // 프로필 이미지 URL 가져오기 (소셜/일반 로그인 모두 지원)
+  const getProfileImageUrl = () => {
+    if (!user) return defaultImage;
+    
+    // 소셜 로그인 프로필 이미지 (외부 URL)
+    if (user.picture) return user.picture;
+    
+    // 일반 로그인 프로필 이미지 (서버 저장)
+    if (user.userProfileImage) return `http://${config.IP_ADD}${user.userProfileImage}`;
+    
+    return defaultImage;
+  };
+
+  // 로그인 제공자 가져오기 (GOOGLE, KAKAO, 또는 일반)
+  const getAuthProvider = () => {
+    if (!user) return null;
+    if (user.authProvider) return user.authProvider;
+    return "일반";
+  };
+
   //로그아웃 버튼
   const handleLogout = () => {
+    // 소셜 로그인인 경우 추가 로그아웃 처리
+    const authProvider = getAuthProvider();
+    
+    if (authProvider === 'KAKAO' && window.Kakao?.Auth) {
+      if (window.Kakao.Auth.getAccessToken()) {
+        window.Kakao.Auth.logout(() => {
+          console.log('카카오 로그아웃 완료');
+        });
+      }
+    }
+    
+    // 공통 로그아웃 처리
     localStorage.clear();
-    console.log("로그아웃:", user?.userid || "No user");
+    setUser(null); // UserContext 초기화
+    console.log("로그아웃 완료");
     alert("로그아웃 되었습니다.");
     navigate('/login');
   };
@@ -48,7 +120,6 @@ const TopIcon = ({text}) => {
         alignItems: "center",
         height:"90px",
         width: "100%",  
-
       }}
     >
       <div>
@@ -68,7 +139,6 @@ const TopIcon = ({text}) => {
           backgroundClip: "text", // 텍스트에만 배경색 적용
           textShadow: "2px 2px 5px rgba(0, 0, 0, 0.3)", // 텍스트 그림자
           textAlign: "center", // 가운데 정렬
-          
         }}
       >
         {text}
@@ -88,13 +158,12 @@ const TopIcon = ({text}) => {
               flexDirection: "column",
               alignItems: "center",
               position: "relative",
-              
             }}
             onClick={() => navigate(icon.route)}
           >
             {icon.component}
             {/* 텍스트 부분 */}
-            <span className="tooltip" style={{ fontSize: "13px", whiteSpace: 'nowrap' , }}>
+            <span className="tooltip" style={{ fontSize: "13px", whiteSpace: 'nowrap' }}>
               {icon.label}
             </span>
           </div>
@@ -120,22 +189,17 @@ const TopIcon = ({text}) => {
               borderRadius: "50%",
               cursor: "pointer"
             }}
-            src={
-              user?.userProfileImage 
-                ? `http://${config.IP_ADD}${user.userProfileImage}`
-                : defaultImage  
-            } 
+            src={getProfileImageUrl()}
             onError={(e) => {
               e.target.src = defaultImage;
               e.target.onerror = null; // 무한 루프 방지
             }}
-            alt={`${user?.username || '사용자'} 프로필`}
+            alt={`${getUserNickName()} 프로필`}
             onClick={() => {
               if(isProfileDropdownVisible){
                 setIsMyInfoVisible(false)
               }
               setIsProfileDropdownVisible(!isProfileDropdownVisible)
-            
             }}
           />
           <div
@@ -144,7 +208,6 @@ const TopIcon = ({text}) => {
               overflow: "hidden", // 넘치는 텍스트 숨기기
               whiteSpace: "nowrap", // 텍스트를 한 줄로 유지
               position: "relative", // 내부 요소에 대한 위치 기준
-              
             }}
           >
             <p
@@ -156,7 +219,7 @@ const TopIcon = ({text}) => {
               }}
               className="sliding-text"
             >
-              시골쥐 {user?.userNickName || "시골쥐"}님
+              시골쥐 {getUserNickName()}님
             </p>
           </div>
         </div>
@@ -203,7 +266,7 @@ const TopIcon = ({text}) => {
                 borderRadius: "5px",
               }}
               onClick={() => {
-                navigate(`/mypost/${user.id}`);
+                navigate(`/mypost/${getUserId()}`);
                 setIsProfileDropdownVisible(!isProfileDropdownVisible)
               }}
             >
@@ -226,7 +289,6 @@ const TopIcon = ({text}) => {
         )}
       </div>
     </header>
-
   );
 };
 
