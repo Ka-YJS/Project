@@ -43,10 +43,19 @@ const Write = () => {
     // 사용자 ID 가져오기
     const getUserId = () => {
         if (!user) return null;
+        
         // 소셜 로그인 ID
-        if (user.id) return user.id;
+        if (user.authProvider === 'GOOGLE' && user.id) {
+            return `google_${user.id}`;
+        }
+        if (user.authProvider === 'KAKAO' && user.id) {
+            return `kakao_${user.id}`;
+        }
+        
         // 일반 로그인 ID
         if (user.userid) return user.userid;
+        if (user.id) return user.id;
+        
         return null;
     };
 
