@@ -6,10 +6,12 @@ import "../css/Strat.css";
 import config from "../Apikey";
 import { useContext } from "react";
 import { UserContext } from "../context/UserContext";
+import { useNavigate } from 'react-router-dom';
 
 const OAuthLogIn = () => {
 
     const { user, setUser } = useContext(UserContext);
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Kakao SDK 초기화
@@ -63,10 +65,13 @@ const OAuthLogIn = () => {
             // accessToken과 user 정보 localStorage에 저장
             const { accessToken } = response.data;
             localStorage.setItem('accessToken', accessToken);
+            console.log("저장 직후 accessToken:", localStorage.getItem('accessToken'));
+
             localStorage.setItem('user', JSON.stringify(userData));
+            console.log("저장된 accessToken:", accessToken);
             
             // 로그인 후 리다이렉트
-            window.location.href = '/main';
+            navigate('/main');
         } catch (error) {
             console.error('Google login failed:', error);
             // axios 에러인 경우 응답 데이터도 로깅
@@ -135,7 +140,8 @@ const OAuthLogIn = () => {
                         email: response.data.email,
                         picture: response.data.picture,
                         authProvider: 'KAKAO',
-                        phoneNumber: null // 소셜 로그인은 전화번호 없음
+                        phoneNumber: null, // 소셜 로그인은 전화번호 없음
+                        token: accessToken
                     };
                     
                     // Context 업데이트
@@ -148,7 +154,7 @@ const OAuthLogIn = () => {
                     localStorage.setItem('user', JSON.stringify(userData));  // userData로 통일
                     
                     // 로그인 후 리다이렉트 또는 상태 업데이트
-                    window.location.href = '/main';
+                    navigate('/main');
                 } catch (error) {
                     console.error('Kakao login failed:', error);
                     
