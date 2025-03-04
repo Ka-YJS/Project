@@ -44,31 +44,37 @@ const Write = () => {
     const getUserId = () => {
         if (!user) return null;
         
-        // 소셜 로그인 ID
-        if (user.authProvider === 'GOOGLE' && user.id) {
-            return `google_${user.id}`;
-        }
-        if (user.authProvider === 'KAKAO' && user.id) {
-            return `kakao_${user.id}`;
-        }
-        
-        // 일반 로그인 ID
-        if (user.userid) return user.userid;
+        // 소셜 로그인, 일반 로그인 모두 id 그대로 사용
         if (user.id) return user.id;
+        
+        // 하위 호환성을 위해 남겨둠
+        if (user.userid) return user.userid;
         
         return null;
     };
 
     // 토큰 가져오기
     const getAuthToken = () => {
+
+        console.log("user 객체:", user);
+        console.log("localStorage에 저장된 토큰:", localStorage.getItem('accessToken'));
+
         if (!user) return null;
         // 소셜 로그인 토큰
-        if (user.accessToken) return user.accessToken;
+        if (user.accessToken) {
+            console.log("user.accessToken 사용:", user.accessToken);
+            return user.accessToken;
+        }
         // 일반 로그인 토큰
-        if (user.token) return user.token;
+        if (user.token) {
+            console.log("user.token 사용:", user.token);
+            return user.token;
+        }
         
         // localStorage에서 토큰 확인
-        return localStorage.getItem('accessToken');
+        const storedToken = localStorage.getItem('accessToken');
+        console.log("localStorage 토큰 사용:", storedToken);
+        return storedToken;
     };
 
     //파일 추가 핸들러
