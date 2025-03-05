@@ -44,38 +44,37 @@ const Write = () => {
     const getUserId = () => {
         if (!user) return null;
         
-        // 소셜 로그인, 일반 로그인 모두 id 그대로 사용
-        if (user.id) return user.id;
+        // 소셜 로그인인 경우 접두사 추가
+        if (isSocialLogin && user.id) {
+            // 소셜 로그인 제공자에 따라 접두사 추가
+            const provider = user.authProvider?.toLowerCase() || 'social';
+            return `${provider}_${user.id}`;
+        }
         
-        // 하위 호환성을 위해 남겨둠
+        // 일반 로그인
+        if (user.id) return user.id;
         if (user.userid) return user.userid;
         
         return null;
     };
 
     const getAuthToken = () => {
-        // localStorage에서 직접 토큰 확인 (가장 우선적으로 확인)
-        const storedToken = localStorage.getItem('accessToken');
-        if (storedToken) {
-            console.log("localStorage 토큰 사용:", storedToken);
-            return storedToken;
-        }
-        
-        if (!user) return null;
-        
-        // 소셜 로그인 토큰
-        if (user.accessToken) {
+        // 소셜 로그인 토큰 (로컬스토리지 확인 전에 먼저 확인)
+        if (user && user.accessToken) {
             console.log("user.accessToken 사용:", user.accessToken);
             return user.accessToken;
         }
         
         // 일반 로그인 토큰
-        if (user.token) {
+        if (user && user.token) {
             console.log("user.token 사용:", user.token);
             return user.token;
         }
         
-        return null;
+        // localStorage에서 토큰 확인 (마지막 대안)
+        const storedToken = localStorage.getItem('accessToken');
+        console.log("localStorage 토큰 사용:", storedToken);
+        return storedToken;
     };
 
     //파일 추가 핸들러
@@ -141,6 +140,7 @@ const Write = () => {
             for (let [key, value] of formData.entries()) {
                 console.log(key, value);
             }
+            
             console.log("사용자 ID:", userId);
             console.log("사용자 토큰:", token);
             
@@ -148,39 +148,60 @@ const Write = () => {
             const endpoint = `http://${config.IP_ADD}/travel/write/${userId}`;
             console.log("API 엔드포인트:", endpoint);
             
-            // 헤더 설정
-            const headers = {
-                "Content-Type": "multipart/form-data"
-            };
+            // 헤더 설정 - multipart/form-data에서는 Content-Type 헤더를 명시적으로 설정하지 않아야 함
+            // axios가 자동으로 boundary 값을 설정함
+            const headers = {};
             
-            // 토큰이 있으면 Authorization 헤더 추가
+            // 토큰 처리 수정
             if (token) {
-                headers["Authorization"] = `Bearer ${token}`;
+                // 1. 토큰에 'Bearer ' 접두사가 이미 포함된 경우 그대로 사용
+                // 2. 접두사가 없는 경우 추가
+                headers["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+                console.log("설정된 Authorization 헤더:", headers["Authorization"]);
+            } else {
+                console.error("토큰이 없습니다. 인증이 불가능합니다.");
+                alert("인증 정보가 없습니다. 다시 로그인해주세요.");
+                navigate("/login");
+                return;
             }
             
+            // Axios 요청 설정 수정 - withCredentials를 true로 설정하여 쿠키 전송
             const response = await axios.post(endpoint, formData, {
                 headers: headers,
                 withCredentials: true
             });
-
+        
             console.log("Response:", response);
             alert("글이 저장되었습니다!");
             navigate("/PostDetail/" + response.data.postId);
         } catch (error) {
             console.error("Error saving post:", error);
-            alert("저장 중 오류가 발생했습니다.");
+            
+            // 에러 상세 정보 로깅
             if (error.response) {
                 console.log("Response Data:", error.response.data);
                 console.log("Response Status:", error.response.status);
+                console.log("Response Headers:", error.response.headers);
                 
-                // 토큰 오류인 경우
-                if (error.response.status === 403 && error.response.data.includes("Token validation failed")) {
-                    alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
-                    navigate("/login");
+                // 토큰 오류인 경우 구체적인 메시지 표시
+                if (error.response.status === 403) {
+                    if (error.response.data.includes("Token validation failed")) {
+                        alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
+                        // 토큰 삭제 및 리다이렉트
+                        localStorage.removeItem('accessToken');
+                        navigate("/login");
+                        return;
+                    } else if (error.response.data.includes("User ID in token does not match")) {
+                        alert("사용자 ID가 일치하지 않습니다. 다시 로그인해주세요.");
+                        localStorage.removeItem('accessToken');
+                        navigate("/login");
+                        return;
+                    }
                 }
             }
-        }
-    };
+            
+            alert("저장 중 오류가 발생했습니다. " + (error.response?.data || error.message));
+        }}
 
     // 취소 버튼 핸들러
     const handleCancel = () => {
