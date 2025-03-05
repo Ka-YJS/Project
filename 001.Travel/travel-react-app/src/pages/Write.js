@@ -53,28 +53,29 @@ const Write = () => {
         return null;
     };
 
-    // 토큰 가져오기
     const getAuthToken = () => {
-
-        console.log("user 객체:", user);
-        console.log("localStorage에 저장된 토큰:", localStorage.getItem('accessToken'));
-
+        // localStorage에서 직접 토큰 확인 (가장 우선적으로 확인)
+        const storedToken = localStorage.getItem('accessToken');
+        if (storedToken) {
+            console.log("localStorage 토큰 사용:", storedToken);
+            return storedToken;
+        }
+        
         if (!user) return null;
+        
         // 소셜 로그인 토큰
         if (user.accessToken) {
             console.log("user.accessToken 사용:", user.accessToken);
             return user.accessToken;
         }
+        
         // 일반 로그인 토큰
         if (user.token) {
             console.log("user.token 사용:", user.token);
             return user.token;
         }
         
-        // localStorage에서 토큰 확인
-        const storedToken = localStorage.getItem('accessToken');
-        console.log("localStorage 토큰 사용:", storedToken);
-        return storedToken;
+        return null;
     };
 
     //파일 추가 핸들러
