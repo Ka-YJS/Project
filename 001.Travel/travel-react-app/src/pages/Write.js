@@ -59,22 +59,25 @@ const Write = () => {
     };
 
     const getAuthToken = () => {
-        // 소셜 로그인 토큰 (로컬스토리지 확인 전에 먼저 확인)
+        // localStorage에서 먼저 확인 (가장 신뢰할 수 있는 소스)
+        const storedToken = localStorage.getItem('accessToken');
+        if (storedToken) {
+            console.log("localStorage 토큰 사용:", storedToken);
+            return storedToken;
+        }
+        
+        // context에서 확인
         if (user && user.accessToken) {
             console.log("user.accessToken 사용:", user.accessToken);
             return user.accessToken;
         }
         
-        // 일반 로그인 토큰
         if (user && user.token) {
             console.log("user.token 사용:", user.token);
             return user.token;
         }
         
-        // localStorage에서 토큰 확인 (마지막 대안)
-        const storedToken = localStorage.getItem('accessToken');
-        console.log("localStorage 토큰 사용:", storedToken);
-        return storedToken;
+        return null;
     };
 
     //파일 추가 핸들러
@@ -111,6 +114,13 @@ const Write = () => {
             alert("제목과 내용을 모두 입력해주세요.");
             return;
         }        
+
+        const token = getAuthToken();
+            if (!token) {
+                alert("인증 정보가 없습니다. 다시 로그인해주세요.");
+                navigate("/login");
+                return;
+            }
     
         //허용된 파일 확장자 검사
         const allowedExtensions = ["png", "jpg", "jpeg", "gif"];
@@ -127,7 +137,6 @@ const Write = () => {
         const formData = new FormData();
         const userId = getUserId();
         const userNickName = getUserNickName();
-        const token = getAuthToken();
 
         formData.append("postTitle", postTitle);
         formData.append("postContent", postContent);
