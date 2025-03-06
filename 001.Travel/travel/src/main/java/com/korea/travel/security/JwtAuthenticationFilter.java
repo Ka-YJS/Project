@@ -125,16 +125,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      - @return 두 ID가 호환되면 true, 아니면 false
      */
     private boolean isCompatibleId(String pathId, String tokenId) {
+        System.out.println("Comparing pathId: " + pathId + " with tokenId: " + tokenId);
+        
         // 카카오 소셜 로그인 처리
         if (pathId.startsWith("kakao_")) {
             String kakaoId = pathId.substring("kakao_".length());
-            return tokenId.equals(kakaoId) || tokenId.contains(kakaoId);
+            return tokenId.equals(kakaoId);
         }
         
         // 구글 소셜 로그인 처리
         if (pathId.startsWith("google_")) {
             String googleId = pathId.substring("google_".length());
-            return tokenId.equals(googleId) || tokenId.contains(googleId);
+            return tokenId.equals(googleId);
         }
         
         return false;
