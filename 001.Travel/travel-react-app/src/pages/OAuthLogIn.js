@@ -64,11 +64,20 @@ const OAuthLogIn = () => {
             
             // accessToken과 user 정보 localStorage에 저장
             const { accessToken } = response.data;
+            
+            // 토큰 검증
+            if (!accessToken) {
+                throw new Error("서버에서 토큰을 받지 못했습니다.");
+            }
+            
+            // 토큰 저장 및 검증
             localStorage.setItem('accessToken', accessToken);
-            console.log("저장 직후 accessToken:", localStorage.getItem('accessToken'));
-
-            localStorage.setItem('user', JSON.stringify(userData));
-            console.log("저장된 accessToken:", accessToken);
+            const storedToken = localStorage.getItem('accessToken');
+            if (storedToken !== accessToken) {
+                throw new Error("토큰 저장에 실패했습니다.");
+            }
+        
+        console.log("토큰 검증 성공:", storedToken);
             
             // 로그인 후 리다이렉트
             navigate('/main');
@@ -141,7 +150,7 @@ const OAuthLogIn = () => {
                         picture: response.data.picture,
                         authProvider: 'KAKAO',
                         phoneNumber: null, // 소셜 로그인은 전화번호 없음
-                        token: accessToken
+                        accessToken: accessToken
                     };
                     
                     // Context 업데이트
@@ -150,8 +159,19 @@ const OAuthLogIn = () => {
                     // 로그인 성공 처리
                     // accessToken과 user 정보 localStorage에 저장
                     const { accessToken } = response.data;
+                    // 토큰 검증
+                    if (!accessToken) {
+                        throw new Error("서버에서 토큰을 받지 못했습니다.");
+                    }
+                    
+                    // 토큰 저장 및 검증
                     localStorage.setItem('accessToken', accessToken);
-                    localStorage.setItem('user', JSON.stringify(userData));  // userData로 통일
+                    const storedToken = localStorage.getItem('accessToken');
+                    if (storedToken !== accessToken) {
+                        throw new Error("토큰 저장에 실패했습니다.");
+                    }
+                
+                    console.log("토큰 검증 성공:", storedToken);
                     
                     // 로그인 후 리다이렉트 또는 상태 업데이트
                     navigate('/main');
