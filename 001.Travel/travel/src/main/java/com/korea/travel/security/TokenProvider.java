@@ -69,7 +69,7 @@ public class TokenProvider {
 				.setHeader(header)
 				.setClaims(claims)  // 추가 정보 담기
 				.signWith(SignatureAlgorithm.HS512, secretKey)
-				.setSubject(email != null ? email : socialId)  // 이메일이 있으면 이메일을, 없으면 socialId를 subject로
+				.setSubject(socialId)
 				.setIssuer("travel app")
 				.setIssuedAt(new Date())
 				.setExpiration(ext)
