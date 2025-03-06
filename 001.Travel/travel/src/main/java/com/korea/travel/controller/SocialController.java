@@ -1,10 +1,25 @@
 package com.korea.travel.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.korea.travel.dto.SocialDTO;
 import com.korea.travel.model.SocialEntity;
+import com.korea.travel.security.TokenProvider;
 import com.korea.travel.service.SocialService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,22 +29,44 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/social")
 public class SocialController {
     private final SocialService socialService;
+    private final TokenProvider tokenProvider;
     
     // 소셜 사용자 정보 저장/업데이트
     @PostMapping("/user")
-    public ResponseEntity<SocialEntity> saveOrUpdateUser(@RequestBody SocialDTO.dto socialDTO) {
+    public ResponseEntity<?> saveOrUpdateUser(@RequestBody SocialDTO.dto socialDTO) {
+    	
         log.info("=== Starting saveOrUpdateUser ===");
         log.info("Received socialDTO: {}", socialDTO);
         
-        // 필수 필드 검증 추가
+     // 필수 필드 검증 추가
         if (socialDTO.getName() == null || socialDTO.getSocialId() == null) {
             throw new IllegalArgumentException("Name and socialId are required fields");
         }
         
         try {
-            SocialEntity result = socialService.saveOrUpdate(socialDTO);
-            log.info("Successfully saved/updated user: {}", result);
-            return ResponseEntity.ok(result);
+            // 사용자 저장/업데이트
+            SocialEntity entity = socialService.saveOrUpdate(socialDTO);
+            log.info("Successfully saved/updated user: {}", entity);
+            
+            // 토큰 생성
+            String token = tokenProvider.createToken(
+                entity.getSocialId(), 
+                entity.getEmail(), 
+                entity.getRole().name()
+            );
+            
+            // 응답 데이터 구성
+            Map<String, Object> response = new HashMap<>();
+            response.put("accessToken", token);
+            response.put("socialId", entity.getSocialId());
+            response.put("name", entity.getName());
+            response.put("email", entity.getEmail());
+            response.put("picture", entity.getPicture());
+            
+            // 생성된 토큰 로깅 (디버깅용)
+            log.info("Generated token for user {}: {}", entity.getSocialId(), token);
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("Error in saveOrUpdateUser: ", e);
             throw e;
