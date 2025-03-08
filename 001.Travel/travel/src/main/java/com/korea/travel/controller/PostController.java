@@ -17,10 +17,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -39,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/travel")
 //@CrossOrigin(origins = "https://countryrat.site") // React 앱이 동작하는 주소
+@CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true") 
 @RequiredArgsConstructor
 public class PostController {
 
@@ -47,6 +52,8 @@ public class PostController {
 	private final UserRepository userRepository;
 	
 	private final PostRepository postRepository;
+	
+	private final Logger logger = LoggerFactory.getLogger(PostController.class);
 
     // 게시판 전체 조회
     @GetMapping("/posts")
@@ -66,10 +73,31 @@ public class PostController {
     
     // 게시글 한 건 조회
     @GetMapping("/posts/postDetail/{id}")
-    public ResponseEntity<?> getPostById(@PathVariable Long id) {
-        List<PostDTO> dtos = List.of(postService.getPostById(id));
-        ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().data(dtos).build();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> getPostById(@PathVariable Long id,
+    		@RequestHeader(value = "Authorization", required = false) String authHeader) {
+	    	
+    	logger.info("Authorization 헤더: {}", authHeader);
+        
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            logger.warn("유효하지 않은 인증 토큰");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효한 인증 토큰이 필요합니다.");
+        }
+    	
+    	logger.info("게시글 상세 조회 요청: ID={}", id);
+    	
+        try {
+            // ID 유효성 검사 추가
+            if (id == null) {
+                return ResponseEntity.badRequest().body("유효하지 않은 게시글 ID입니다.");
+            }
+            
+            List<PostDTO> dtos = List.of(postService.getPostById(id));
+            ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().data(dtos).build();
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            // 예외 처리 및 로깅
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("게시글을 찾을 수 없습니다: " + e.getMessage());
+        }
     }
 
     // 게시글 작성 + 이미지 업로드
