@@ -17,6 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.korea.travel.dto.PostDTO;
 import com.korea.travel.model.PostEntity;
 import com.korea.travel.model.UserEntity;
@@ -35,6 +38,8 @@ public class PostService {
     private final UserRepository userRepository;
     
     private final LikeRepository likeRepository;
+    
+    private final Logger logger = LoggerFactory.getLogger(PostService.class);
 	
 
     @Value("${file.upload-dir}") // 파일 저장 경로 설정
@@ -68,6 +73,9 @@ public class PostService {
     // 게시글 한 건 조회
     @Transactional(readOnly = true)// 데이터 읽기 전용 트랜잭션
     public PostDTO getPostById(Long id) {
+    	
+    	logger.info("게시글 조회 서비스 호출: ID={}", id);
+    	
         Optional<PostEntity> board = postRepository.findById(id);
         if(board.isPresent()) {
         	return board.map(this::convertToDTO)
