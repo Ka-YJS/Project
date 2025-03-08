@@ -144,6 +144,7 @@ const PostEdit = () => {
 
             alert("글이 수정되었습니다!");
 
+            console.log("Redirecting to post ID:", id);
             navigate(`/postdetail/${id}`, { state: { from: location.state?.from } });  // 이전 경로로 이동
             
 
