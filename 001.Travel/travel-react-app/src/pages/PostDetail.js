@@ -20,6 +20,12 @@ const PostDetail = () => {
 
     // 게시글 상세 데이터 가져오기
     const getPostDetail = async () => {
+
+        if (!id || id === 'undefined') {
+            console.error("Invalid post ID for detail fetching");
+            return;
+        }
+
         try {
             const response = await axios.get(`http://${config.IP_ADD}/travel/posts/postDetail/${id}`, {
                 headers: {
@@ -42,6 +48,12 @@ const PostDetail = () => {
 
     // 좋아요 상태 가져오기
     const getLikeStatus = async () => {
+
+        if (!id || id === 'undefined') {
+            console.error("Invalid post ID for like status fetching");
+            return;
+        }
+        
         try {
             const response = await axios.get(`http://${config.IP_ADD}/travel/likes/${id}/isLiked`, {
                 headers: { 
@@ -88,9 +100,15 @@ const PostDetail = () => {
     }, [location]);
 
     useEffect(() => {
-        getPostDetail();
-        getLikeStatus(); // 좋아요 상태 가져오기
-    }, []);
+        if (id && id !== 'undefined') {  // id가 존재하고 undefined가 아닐 때만 실행
+            getPostDetail();
+            getLikeStatus(); // 좋아요 상태 가져오기
+        } else {
+            console.error("Invalid post ID:", id);
+            alert("게시글 정보를 찾을 수 없습니다.");
+            navigate('/post'); // 게시글 목록으로 이동
+        }
+    }, [id, user.token]); // id와 token을 의존성 배열에 추가
 
     if (!post) {
         return (
