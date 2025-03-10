@@ -18,6 +18,16 @@ const Write = () => {
     const [isSocialLogin, setIsSocialLogin] = useState(false); // 소셜 로그인 여부
     const navigate = useNavigate();
 
+    // list 상태 모니터링을 위한 useEffect 추가
+    useEffect(() => {
+        console.log("Write.js - list 상태:", list);
+        // list 타입 확인
+        if (list === undefined) console.log("list는 undefined입니다");
+        if (list === null) console.log("list는 null입니다");
+        if (Array.isArray(list)) console.log("list는 배열이고 길이는", list.length);
+        else console.log("list는 배열이 아닙니다:", typeof list);
+    }, [list]);
+
     // 컴포넌트 마운트 시 소셜 로그인 여부 확인
     useEffect(() => {
         if (user) {
@@ -28,6 +38,14 @@ const Write = () => {
             console.log("현재 사용자 정보:", user);
         }
     }, [user]);
+
+    useEffect(() => {
+        // list가 변경될 때마다 다른 필드 초기화
+        setPostTitle("");
+        setPostContent("");
+        setSelectedFiles([]);
+        setPreviewUrls([]);
+    }, [list]); // list가 변경될 때마다 실행
 
     // 사용자 닉네임 가져오기 (소셜/일반 로그인 모두 지원)
     const getUserNickName = () => {
@@ -42,7 +60,7 @@ const Write = () => {
 
     // 사용자 ID 가져오기
     const getUserId = () => {
-        if (!user) return null;
+        if (!user) return user.id || null;;
         
         // 소셜 로그인인 경우 접두사 추가
         if (isSocialLogin && user.id) {
@@ -182,7 +200,7 @@ const Write = () => {
         
             console.log("Response:", response);
             alert("글이 저장되었습니다!");
-            navigate("/PostDetail/" + response.data.postId);
+            navigate(`/postdetail/${response.data.postId}`);
         } catch (error) {
             console.error("Error saving post:", error);
             
@@ -222,6 +240,26 @@ const Write = () => {
         }
     };
 
+    // list 값이 유효한지 확인하고 안전하게 표시하는 함수
+    const getLocationDisplay = () => {
+        if (!list) return "여행지를 추가해주세요";
+        if (!Array.isArray(list)) return "여행지 데이터가 올바르지 않습니다";
+        if (list.length === 0) return "여행지가 없습니다. 지도에서 추가해주세요";
+        
+        // 배열 항목이 2개 이상일 때만 화살표 추가
+        if (list.length === 1) return list[0];
+        
+        // 배열 항목들 사이에 " -> " 삽입
+        let result = "";
+        for (let i = 0; i < list.length; i++) {
+            result += list[i];
+            if (i < list.length - 1) {
+                result += " -> ";
+            }
+        }
+        return result;
+    };
+
     return (
         <div className="write">
             {/* 제목 입력 */}
@@ -254,10 +292,14 @@ const Write = () => {
                     fullWidth
                     variant="outlined"
                     label="여행지"
-                    value={list.join(" -> ")}
+                    value={getLocationDisplay()}
                     multiline
                     rows={2}
                 />
+                {/* 디버깅용 정보 - 개발 중에만 사용 */}
+                <div style={{fontSize: '12px', color: 'gray', marginTop: '4px'}}>
+                    list 상태: {Array.isArray(list) ? `배열 (${list.length}개 항목)` : `${typeof list}`}
+                </div>
             </div>
 
             {/* 내용 입력 */}
