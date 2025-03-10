@@ -38,11 +38,6 @@ const Map = () => {
     const [topIconHeight, setTopIconHeight] = useState(0);
 
     useEffect(() => {
-        setList([])
-        setPlaceList([])
-    },[])
-
-    useEffect(() => {
         const topIconElement = document.querySelector('.home-header');
         if (topIconElement) {
             setTopIconHeight(topIconElement.offsetHeight);  // 상단 아이콘의 높이를 가져와 상태에 설정
@@ -194,11 +189,21 @@ const Map = () => {
                         여행지 List
                         <Button
                             onClick={() => {
-                                setList(placeList);  // 장소 목록을 리스트에 추가
-                                console.log("list: " + list, "placeList: " + placeList);  // 목록 확인용 로그
+                                // 새로운 배열 객체를 생성 (이전 list 상태를 무시하고 새롭게 설정)
+                                const newList = [...placeList];
+                                setList(newList);
+                                
+                                // placeList도 초기화 (선택한 여행지 목록 비우기)
+                                setPlaceList([]);
+                                
+                                // 추가 작업이 필요하면 여기에 코드 추가
+                                console.log("여행지 설정 완료, 선택 목록 초기화");
+                                
+                                // 알림 표시 (선택 사항)
+                                alert("여행지가 추가되었습니다!");
                             }}
                         >
-                            추가하기  {/* 추가하기 버튼 */}
+                            추가하기
                         </Button>
                     </h3>
                     <ul>
