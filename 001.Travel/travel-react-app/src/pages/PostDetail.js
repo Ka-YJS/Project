@@ -171,19 +171,28 @@ const PostDetail = () => {
     }, [location]);
 
     useEffect(() => {
-        if (id && id !== 'undefined' && user) {  // id가 존재하고 undefined가 아닐 때, 사용자 정보가 있을 때만 실행
+        // useEffect 시작 시 디버깅 정보 출력
+        console.log("PostDetail useEffect 실행, ID:", id, "User:", user);
+        
+        // id가 존재하는지 확인하고 초기 데이터 로드
+        if (id && id !== 'undefined' && user) {
+            // 정상 케이스: ID와 사용자 정보가 있을 때
             getPostDetail();
-            getLikeStatus(); // 좋아요 상태 가져오기
-        } else if (!user) {
-            console.error("User information not available");
-            alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
-            navigate('/login');
+            getLikeStatus();
         } else {
-            console.error("Invalid post ID:", id);
-            alert("게시글 정보를 찾을 수 없습니다.");
-            navigate('/post'); // 게시글 목록으로 이동
+            // 에러 상황 세분화
+            if (!id || id === 'undefined') {
+                console.error("유효하지 않은 게시글 ID:", id);
+                alert("게시글 정보를 찾을 수 없습니다.");
+                // 게시글 목록으로 리다이렉트
+                navigate('/post', { replace: true }); // replace: true로 이전 페이지를 대체
+            } else if (!user) {
+                console.error("사용자 정보 없음");
+                alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
+                navigate('/login', { replace: true });
+            }
         }
-    }, [id, user]); // id와 user를 의존성 배열에 추가, token 대신 user 전체를 의존성으로 사용
+    }, [id, user, navigate]); // navigate도 의존성 배열에 추가
 
     if (!post) {
         return (
