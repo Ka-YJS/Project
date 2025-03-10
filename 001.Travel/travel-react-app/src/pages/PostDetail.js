@@ -20,27 +20,44 @@ const PostDetail = () => {
 
     // 게시글 상세 데이터 가져오기
     const getPostDetail = async () => {
-
         if (!id || id === 'undefined') {
             console.error("Invalid post ID for detail fetching");
             return;
         }
-
+    
         try {
+            const token = getAuthToken();
+            if (!token) {
+                console.error("인증 토큰이 없습니다.");
+                return;
+            }
+    
+            // Bearer 접두사 처리
+            const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+    
             const response = await axios.get(`http://${config.IP_ADD}/travel/posts/postDetail/${id}`, {
                 headers: {
                     "Content-Type": "multipart/form-data",
-                    Authorization: `Bearer ${user.token}`,
+                    Authorization: authHeader,
                     Accept: '*/*'
                 },
-                    withCredentials: true
+                withCredentials: true
             });
+            
             const data = response.data.data[0];
             setPost(data);
             setImageUrls(data.imageUrls || []);
             setLikeCount(data.likes || 0); // 초기 좋아요 개수 설정
         } catch (error) {
             console.error("Error fetching post details:", error);
+            
+            // 토큰 오류 처리
+            if (error.response && error.response.status === 401) {
+                alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
+                navigate("/login");
+                return;
+            }
+            
             alert("게시글 정보를 불러오는 중 오류가 발생했습니다.");
             navigate(-1); // 이전 페이지로 이동
         }
@@ -299,7 +316,7 @@ const PostDetail = () => {
                     >
                         목록
                     </Button>
-                    {post.userId === user.id && (
+                    {String(post.userId) === String(getUserId()) && (
                         <div>
                             <Button
                                 variant="outlined"
