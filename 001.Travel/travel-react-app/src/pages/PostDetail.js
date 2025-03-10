@@ -18,6 +18,33 @@ const PostDetail = () => {
     const navigate = useNavigate();
     const location = useLocation(); // 현재 위치 추적
 
+    // 인증 토큰 일관되게 가져오기
+    const getAuthToken = () => {
+        // user.token이 가장 신뢰할 수 있는 소스
+        if (user && user.token) {
+            return user.token;
+        }
+        
+        // 그 다음 accessToken 확인
+        if (user && user.accessToken) {
+            return user.accessToken;
+        }
+        
+        // 마지막으로 localStorage 확인
+        const storedToken = localStorage.getItem('accessToken');
+        if (storedToken) {
+            return storedToken;
+        }
+        
+        return null;
+    };
+
+    // 사용자 ID 가져오기 - 일관된 방식
+    const getUserId = () => {
+        if (!user) return null;
+        return user.id || null;
+    };
+
     // 게시글 상세 데이터 가져오기
     const getPostDetail = async () => {
         if (!id || id === 'undefined') {
@@ -65,19 +92,27 @@ const PostDetail = () => {
 
     // 좋아요 상태 가져오기
     const getLikeStatus = async () => {
-
         if (!id || id === 'undefined') {
             console.error("Invalid post ID for like status fetching");
             return;
         }
         
         try {
+            const token = getAuthToken();
+            if (!token) {
+                console.error("인증 토큰이 없습니다.");
+                return;
+            }
+            
+            // Bearer 접두사 처리
+            const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+            
             const response = await axios.get(`http://${config.IP_ADD}/travel/likes/${id}/isLiked`, {
                 headers: { 
-                    Authorization: `Bearer ${user.token}` ,
+                    Authorization: authHeader,
                     Accept: '*/*'
                 },
-                    withCredentials: true
+                withCredentials: true
             });
             setIsLiked(response.data); // 좋아요 상태 설정
         } catch (error) {
@@ -88,6 +123,16 @@ const PostDetail = () => {
     // 좋아요 버튼 클릭
     const likeButtonClick = async () => {
         try {
+            const token = getAuthToken();
+            if (!token) {
+                alert("인증 정보가 없습니다. 다시 로그인해주세요.");
+                navigate("/login");
+                return;
+            }
+            
+            // Bearer 접두사 처리
+            const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+            
             console.log("isLiked"+isLiked)
             const url = `http://${config.IP_ADD}/travel/likes/${id}`;
             const method = isLiked ? "delete" : "post"; // Toggle between POST and DELETE
@@ -96,7 +141,8 @@ const PostDetail = () => {
             const response = await axios({
                 method,
                 url,
-                headers: { Authorization: `Bearer ${user.token}` },
+                headers: { Authorization: authHeader },
+                withCredentials: true
             });
     
             setIsLiked(!isLiked);
@@ -107,6 +153,14 @@ const PostDetail = () => {
             }
         } catch (error) {
             console.error("Error updating like:", error);
+            
+            // 토큰 오류 처리
+            if (error.response && error.response.status === 401) {
+                alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
+                navigate("/login");
+                return;
+            }
+            
             alert("좋아요 처리 중 문제가 발생했습니다.");
         }
     };
@@ -117,15 +171,19 @@ const PostDetail = () => {
     }, [location]);
 
     useEffect(() => {
-        if (id && id !== 'undefined') {  // id가 존재하고 undefined가 아닐 때만 실행
+        if (id && id !== 'undefined' && user) {  // id가 존재하고 undefined가 아닐 때, 사용자 정보가 있을 때만 실행
             getPostDetail();
             getLikeStatus(); // 좋아요 상태 가져오기
+        } else if (!user) {
+            console.error("User information not available");
+            alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
+            navigate('/login');
         } else {
             console.error("Invalid post ID:", id);
             alert("게시글 정보를 찾을 수 없습니다.");
             navigate('/post'); // 게시글 목록으로 이동
         }
-    }, [id, user.token]); // id와 token을 의존성 배열에 추가
+    }, [id, user]); // id와 user를 의존성 배열에 추가, token 대신 user 전체를 의존성으로 사용
 
     if (!post) {
         return (
@@ -140,8 +198,8 @@ const PostDetail = () => {
 
     // 목록 버튼 클릭
     const listButtonClick = () => {
-        if (previousPath && previousPath.includes(`/mypost/${user.id}`)) {
-            navigate(`/mypost/${user.id}`); // 이전 경로로 이동
+        if (previousPath && previousPath.includes(`/mypost/${getUserId()}`)) {
+            navigate(`/mypost/${getUserId()}`); // 이전 경로로 이동
         } else {
             navigate("/post");
         }
@@ -156,17 +214,27 @@ const PostDetail = () => {
     const handleDelete = async () => {
         if (window.confirm("게시글을 삭제하시겠습니까?")) {
             try {
+                const token = getAuthToken();
+                if (!token) {
+                    alert("인증 정보가 없습니다. 다시 로그인해주세요.");
+                    navigate("/login");
+                    return;
+                }
+                
+                // Bearer 접두사 처리
+                const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+                
                 const response = await axios.delete(`http://${config.IP_ADD}/travel/postDelete/${id}`, {
                     headers: {
-                        Authorization: `Bearer ${user.token}`,
+                        Authorization: authHeader,
                         Accept: '*/*'
                     },
-                        withCredentials: true
+                    withCredentials: true
                 });
                 if (response.data) {
                     alert("삭제되었습니다.");
-                    if (previousPath && previousPath.includes(`/mypost/${user.id}`)) {
-                        navigate(`/mypost/${user.id}`); // 이전 경로로 이동
+                    if (previousPath && previousPath.includes(`/mypost/${getUserId()}`)) {
+                        navigate(`/mypost/${getUserId()}`); // 이전 경로로 이동
                     } else {
                         navigate("/post");
                     }
@@ -295,7 +363,7 @@ const PostDetail = () => {
                                 cursor: "pointer", // 클릭 커서 스타일
                             }}
                         >
-                <span style={{ fontSize: "25px" }}> {/* Increase font size here */}
+                <span style={{ fontSize: "25px" }}>
                     {isLiked ? "❤️" : "🤍"} {/* 좋아요 상태에 따라 하트 색상 변경 */}
                 </span>
                 </Button>
