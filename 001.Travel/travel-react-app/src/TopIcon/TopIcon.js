@@ -35,13 +35,6 @@ const TopIcon = ({text}) => {
     }
   }, []);
 
-  // 사용자 정보 확인용 로그
-  useEffect(() => {
-    if (user) {
-      console.log("현재 사용자 정보:", user);
-    }
-  }, [user]);
-
   const iconComponents = [
     { id: "home", component: <SlHome size={23} />, route: "/main", label: "홈"},
     { id: "map", component: <MdNoteAlt size={23} />, route: "/map",label: "기록하기" },
