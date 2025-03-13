@@ -35,8 +35,6 @@ public class SocialController {
     @PostMapping("/user")
     public ResponseEntity<?> saveOrUpdateUser(@RequestBody SocialDTO.dto socialDTO) {
     	
-        log.info("=== Starting saveOrUpdateUser ===");
-        log.info("Received socialDTO: {}", socialDTO);
         
      // 필수 필드 검증 추가
         if (socialDTO.getName() == null || socialDTO.getSocialId() == null) {
