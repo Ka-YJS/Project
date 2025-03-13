@@ -45,8 +45,6 @@ const OAuthLogIn = () => {
                 }
             );
 
-            // 응답 데이터 확인
-            console.log('Server Response:', response.data);
         
             // Session 정보를 user 객체로 저장
             const userData = {
@@ -77,8 +75,6 @@ const OAuthLogIn = () => {
                 throw new Error("토큰 저장에 실패했습니다.");
             }
         
-        console.log("토큰 검증 성공:", storedToken);
-            
             // 로그인 후 리다이렉트
             navigate('/main');
         } catch (error) {
