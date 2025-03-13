@@ -22,9 +22,7 @@ public class SocialService {
    private UserMapper userMapper;
    
    public UserDTO getUserDTO(UserEntity userEntity) {
-       log.info("=== Starting getUserDTO ===");
        UserDTO result = userMapper.toUserDTO(userEntity);
-       log.info("Converted UserDTO: {}", result);
        return result;
    }
    
