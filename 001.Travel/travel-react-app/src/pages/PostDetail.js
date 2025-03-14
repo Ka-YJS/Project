@@ -171,8 +171,6 @@ const PostDetail = () => {
     }, [location]);
 
     useEffect(() => {
-        // useEffect 시작 시 디버깅 정보 출력
-        console.log("PostDetail useEffect 실행, ID:", id, "User:", user);
         
         // id가 존재하는지 확인하고 초기 데이터 로드
         if (id && id !== 'undefined' && user) {
