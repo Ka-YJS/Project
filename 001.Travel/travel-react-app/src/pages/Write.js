@@ -80,7 +80,6 @@ const Write = () => {
         // localStorage에서 먼저 확인 (가장 신뢰할 수 있는 소스)
         const storedToken = localStorage.getItem('accessToken');
         if (storedToken) {
-            console.log("localStorage 토큰 사용:", storedToken);
             return storedToken;
         }
         
@@ -168,12 +167,8 @@ const Write = () => {
                 console.log(key, value);
             }
             
-            console.log("사용자 ID:", userId);
-            console.log("사용자 토큰:", token);
-            
             // API 엔드포인트 확인
             const endpoint = `http://${config.IP_ADD}/travel/write/${userId}`;
-            console.log("API 엔드포인트:", endpoint);
             
             // 헤더 설정 - multipart/form-data에서는 Content-Type 헤더를 명시적으로 설정하지 않아야 함
             // axios가 자동으로 boundary 값을 설정함
@@ -184,7 +179,6 @@ const Write = () => {
                 // 1. 토큰에 'Bearer ' 접두사가 이미 포함된 경우 그대로 사용
                 // 2. 접두사가 없는 경우 추가
                 headers["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
-                console.log("설정된 Authorization 헤더:", headers["Authorization"]);
             } else {
                 console.error("토큰이 없습니다. 인증이 불가능합니다.");
                 alert("인증 정보가 없습니다. 다시 로그인해주세요.");
