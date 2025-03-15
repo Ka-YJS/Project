@@ -236,21 +236,29 @@ const Write = () => {
 
     // list 값이 유효한지 확인하고 안전하게 표시하는 함수
     const getLocationDisplay = () => {
+        // list 존재 여부 확인 후 디버깅 로그 추가
+        console.log("Write.js - getLocationDisplay 호출됨");
+        console.log("Write.js - list 값:", list);
+        
         if (!list) return "여행지를 추가해주세요";
-        if (!Array.isArray(list)) return "여행지 데이터가 올바르지 않습니다";
-        if (list.length === 0) return "여행지가 없습니다. 지도에서 추가해주세요";
+        if (!Array.isArray(list)) {
+            console.error("Write.js - list가 배열이 아님:", list);
+            return "여행지 데이터가 올바르지 않습니다";
+        }
+        if (list.length === 0) {
+            console.log("Write.js - list 배열이 비어있음");
+            return "여행지가 없습니다. 지도에서 추가해주세요";
+        }
         
         // 배열 항목이 2개 이상일 때만 화살표 추가
-        if (list.length === 1) return list[0];
+        if (list.length === 1) {
+            console.log("Write.js - 단일 여행지:", list[0]);
+            return list[0];
+        }
         
         // 배열 항목들 사이에 " -> " 삽입
-        let result = "";
-        for (let i = 0; i < list.length; i++) {
-            result += list[i];
-            if (i < list.length - 1) {
-                result += " -> ";
-            }
-        }
+        console.log("Write.js - 여러 여행지:", list);
+        let result = list.join(" -> ");
         return result;
     };
 
