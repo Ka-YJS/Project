@@ -44,7 +44,6 @@ public class SocialController {
         try {
             // 사용자 저장/업데이트
             SocialEntity entity = socialService.saveOrUpdate(socialDTO);
-            log.info("Successfully saved/updated user: {}", entity);
             
             // 토큰 생성
             String token = tokenProvider.createToken(
@@ -60,9 +59,6 @@ public class SocialController {
             response.put("name", entity.getName());
             response.put("email", entity.getEmail());
             response.put("picture", entity.getPicture());
-            
-            // 생성된 토큰 로깅 (디버깅용)
-            log.info("Generated token for user {}: {}", entity.getSocialId(), token);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
