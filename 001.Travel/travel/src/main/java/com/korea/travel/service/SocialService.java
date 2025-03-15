@@ -74,7 +74,6 @@ public class SocialService {
                    .orElse(socialDTO.toEntity());
            
            SocialEntity savedUser = socialRepository.save(user);
-           log.info("Successfully saved/updated user: {}", savedUser);
            return savedUser;
        } catch (Exception e) {
     	    log.error("Error in saveOrUpdate: ", e);
