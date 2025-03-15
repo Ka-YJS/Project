@@ -62,7 +62,6 @@ public class SocialEntity {
     
     // 프로필 업데이트 메소드
     public SocialEntity update(String name, String email, String picture) {
-        log.info("Updating social entity - name: {}, email: {}", name, email);
         this.name = name;
         this.email = email;
         this.picture = picture;
