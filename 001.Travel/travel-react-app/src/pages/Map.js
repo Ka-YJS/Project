@@ -109,8 +109,14 @@ const Map = () => {
     // 장소 목록에 선택된 장소를 추가하는 함수
     const handleAddToPlaceList = () => {
         if (placeName) {
-            setPlaceList((prevList) => [...prevList, placeName]);  // 장소 목록에 추가
-            setPlaceName("");  // 장소 이름 초기화
+        // 장소 목록과 list 상태 모두 업데이트
+        const newPlace = placeName;
+        setPlaceList(prevList => [...prevList, newPlace]);
+        console.log("장소 추가:", newPlace);
+        
+        // 알림 표시
+        alert(`"${newPlace}" 여행지가 추가되었습니다!`);
+        setPlaceName(""); // 장소 이름 초기화
         }
     };
 
@@ -189,20 +195,24 @@ const Map = () => {
                         여행지 List
                         <Button
                             onClick={() => {
-                                // 새로운 배열 객체를 생성 (이전 list 상태를 무시하고 새롭게 설정)
-                                const newList = [...placeList];
-                                setList(newList);
+                                // placeList에 항목이 있는지 확인
+                                if (placeList.length === 0) {
+                                alert("추가할 여행지가 없습니다. 먼저 장소를 검색하고 추가해주세요.");
+                                return;
+                                }
                                 
-                                // placeList도 초기화 (선택한 여행지 목록 비우기)
+                                // placeList의 모든 항목을 list에 복사 (이전 list와 병합)
+                                console.log("추가 전 list:", list);
+                                setList(prevList => [...prevList, ...placeList]);
+                                console.log("추가 후 예상 list:", [...list, ...placeList]);
+                                
+                                // 추가 후 placeList 초기화
                                 setPlaceList([]);
                                 
-                                // 추가 작업이 필요하면 여기에 코드 추가
-                                console.log("여행지 설정 완료, 선택 목록 초기화");
-                                
-                                // 알림 표시 (선택 사항)
+                                // 알림 표시
                                 alert("여행지가 추가되었습니다!");
                             }}
-                        >
+                            >
                             추가하기
                         </Button>
                     </h3>
