@@ -116,7 +116,7 @@ const OAuthLogIn = () => {
                         {
                             socialId: userInfo.id,
                             name: userInfo.kakao_account.profile.nickname,
-                            email: userInfo.kakao_account.email || `kakao_${userInfo.id}@kakao.com`,
+                            email: userInfo.kakao_account.email || `${userInfo.id}@kakao.com`,
                             picture: userInfo.kakao_account.profile.profile_image_url,
                             authProvider: 'KAKAO',
                             role: 'USER'
