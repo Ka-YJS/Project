@@ -18,24 +18,12 @@ const Write = () => {
     const [isSocialLogin, setIsSocialLogin] = useState(false); // 소셜 로그인 여부
     const navigate = useNavigate();
 
-    // list 상태 모니터링을 위한 useEffect 추가
-    useEffect(() => {
-        console.log("Write.js - list 상태:", list);
-        // list 타입 확인
-        if (list === undefined) console.log("list는 undefined입니다");
-        if (list === null) console.log("list는 null입니다");
-        if (Array.isArray(list)) console.log("list는 배열이고 길이는", list.length);
-        else console.log("list는 배열이 아닙니다:", typeof list);
-    }, [list]);
-
     // 컴포넌트 마운트 시 소셜 로그인 여부 확인
     useEffect(() => {
         if (user) {
             // authProvider가 있으면 소셜 로그인으로 판단
             const socialLoginCheck = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
             setIsSocialLogin(socialLoginCheck);
-            console.log("소셜 로그인 여부:", socialLoginCheck);
-            console.log("현재 사용자 정보:", user);
         }
     }, [user]);
 
@@ -85,12 +73,10 @@ const Write = () => {
         
         // context에서 확인
         if (user && user.accessToken) {
-            console.log("user.accessToken 사용:", user.accessToken);
             return user.accessToken;
         }
         
         if (user && user.token) {
-            console.log("user.token 사용:", user.token);
             return user.token;
         }
         
@@ -236,9 +222,6 @@ const Write = () => {
 
     // list 값이 유효한지 확인하고 안전하게 표시하는 함수
     const getLocationDisplay = () => {
-        // list 존재 여부 확인 후 디버깅 로그 추가
-        console.log("Write.js - getLocationDisplay 호출됨");
-        console.log("Write.js - list 값:", list);
         
         if (!list) return "여행지를 추가해주세요";
         if (!Array.isArray(list)) {
@@ -246,18 +229,15 @@ const Write = () => {
             return "여행지 데이터가 올바르지 않습니다";
         }
         if (list.length === 0) {
-            console.log("Write.js - list 배열이 비어있음");
             return "여행지가 없습니다. 지도에서 추가해주세요";
         }
         
         // 배열 항목이 2개 이상일 때만 화살표 추가
         if (list.length === 1) {
-            console.log("Write.js - 단일 여행지:", list[0]);
             return list[0];
         }
         
         // 배열 항목들 사이에 " -> " 삽입
-        console.log("Write.js - 여러 여행지:", list);
         let result = list.join(" -> ");
         return result;
     };
