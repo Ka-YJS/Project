@@ -110,22 +110,14 @@ const OAuthLogIn = () => {
                     url: '/v2/user/me'
                     });
 
-                    console.log("Kakao user info:", userInfo);
-                    console.log("Profile:", userInfo.kakao_account?.profile);
-
-                    // 전송 전 데이터 확인을 위한 로그 추가
-                    console.log("전체 카카오 응답:", JSON.stringify(userInfo, null, 2));
-                    console.log("카카오 계정:", JSON.stringify(userInfo.kakao_account, null, 2));
-                    console.log("프로필:", JSON.stringify(userInfo.kakao_account?.profile, null, 2));
-
                     // 백엔드로 인증 정보 전송
                     const response = await axios.post(
                         `http://${config.IP_ADD}/api/social/user`,
                         {
                             socialId: userInfo.id,
                             name: userInfo.kakao_account.profile.nickname,
-                        email: userInfo.kakao_account.email || `kakao_${userInfo.id}@kakao.com`,
-                        picture: userInfo.kakao_account.profile.profile_image_url,
+                            email: userInfo.kakao_account.email || `kakao_${userInfo.id}@kakao.com`,
+                            picture: userInfo.kakao_account.profile.profile_image_url,
                             authProvider: 'KAKAO',
                             role: 'USER'
                         },
@@ -136,6 +128,8 @@ const OAuthLogIn = () => {
                             withCredentials: true
                         }
                     );
+
+                    const { accessToken } = response.data;
 
                     // Session 정보를 user 객체로 저장
                     const userData = {
@@ -153,8 +147,6 @@ const OAuthLogIn = () => {
                     setUser(userData);
                     
                     // 로그인 성공 처리
-                    // accessToken과 user 정보 localStorage에 저장
-                    const { accessToken } = response.data;
                     // 토큰 검증
                     if (!accessToken) {
                         throw new Error("서버에서 토큰을 받지 못했습니다.");
