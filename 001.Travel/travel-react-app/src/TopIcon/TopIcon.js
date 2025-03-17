@@ -11,11 +11,13 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import defaultImage from '../image/defaultImage.png';
 import Logo from "../pages/Logo";
 import config from "../Apikey";
+import { ListContext } from "../context/ListContext";
 
 const TopIcon = ({text}) => {
   const [isProfileDropdownVisible, setIsProfileDropdownVisible] = useState(false);
   const [isMyInfoVisible, setIsMyInfoVisible] = useState(false); // Collapse 상태 관리
   const { user, setUser } = useContext(UserContext); // user 정보와 setter 가져오기
+  const { list, setList } = useContext(ListContext);
   const navigate = useNavigate();
 
   // 컴포넌트 마운트 시 localStorage에서 사용자 정보 확인
@@ -34,6 +36,16 @@ const TopIcon = ({text}) => {
       }
     }
   }, []);
+
+  // 페이지 이동 처리 함수 추가
+  const handleNavigate = (route) => {
+    // /post 또는 /main으로 이동할 때 list 초기화
+    if (route === "/post" || route === "/main") {
+      console.log("TopIcon - 페이지 이동으로 list 초기화");
+      setList([]);
+    }
+    navigate(route);
+  };
 
   const iconComponents = [
     { id: "home", component: <SlHome size={23} />, route: "/main", label: "홈"},
@@ -175,7 +187,7 @@ const handleLogout = () => {
               alignItems: "center",
               position: "relative",
             }}
-            onClick={() => navigate(icon.route)}
+            onClick={() => handleNavigate(icon.route)}
           >
             {icon.component}
             {/* 텍스트 부분 */}
