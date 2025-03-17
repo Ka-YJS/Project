@@ -52,16 +52,31 @@ public class LikeController {
         return ResponseEntity.ok(liked);
     }
 
-    // 현재 로그인된 사용자의 ID를 가져오는 메소드
+ // 현재 로그인된 사용자의 ID를 가져오는 메소드
     private Long getCurrentUserId() {
-        // SecurityContextHolder에서 userId를 추출
-        UsernamePasswordAuthenticationToken authentication = 
-            (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-     // Authentication 객체에서 사용자 이름을 가져옴
-        String username = (String) authentication.getPrincipal();
+        // SecurityContext에서 Authentication 객체 가져오기
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
         
-        UserEntity user = userRepository.findByUserId(username);
-        // 사용자 이름을 Long 타입으로 변환하여 반환
-        return user.getId();
+        if (authentication != null) {
+            Object principal = authentication.getPrincipal();
+            
+            // Principal이 어떤 타입인지 확인하여 처리
+            if (principal instanceof UserEntity) {
+                // UserEntity 타입인 경우 (JwtAuthenticationFilter 수정 후)
+                return ((UserEntity) principal).getId();
+            } else if (principal instanceof String) {
+                // String 타입인 경우 (현재 구현)
+                String userId = (String) principal;
+                // DB에서 사용자 조회
+                UserEntity user = userRepository.findByUserId(userId);
+                if (user == null) {
+                    throw new RuntimeException("User not found with id: " + userId);
+                }
+                return user.getId();
+            }
+            // 다른 타입 처리 추가 가능 (예: SocialEntity)
+        }
+        
+        throw new RuntimeException("Authentication failed: User not found");
     }
 }
