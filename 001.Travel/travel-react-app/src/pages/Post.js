@@ -20,6 +20,7 @@ const Post = () => {
     const [searchQuery, setSearchQuery] = useState(""); // 검색어
     const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
     const postsPerPage = 10; // 페이지당 게시물 수
+    const { list, setList } = useContext(ListContext);
 
     // 인증 토큰 일관되게 가져오기
     const getAuthToken = () => {
@@ -100,6 +101,15 @@ const Post = () => {
             }
         }
     };
+
+    // 컴포넌트 마운트 시 list 초기화 추가
+    useEffect(() => {
+        // list가 있고 비어있지 않으면 초기화
+        if (list && list.length > 0) {
+            console.log("Post.js - list 초기화");
+            setList([]);
+        }
+    }, []); // 마운트 시 한 번만 실행
 
     // 컴포넌트 마운트 시 게시물 가져오기
     useEffect(() => {
