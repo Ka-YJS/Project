@@ -109,17 +109,21 @@ const Map = () => {
     // 장소 목록에 선택된 장소를 추가하는 함수
     const handleAddToPlaceList = () => {
         if (placeName) {
-        // 장소 목록과 list 상태 모두 업데이트
-        const newPlace = placeName;
-        setPlaceList(prevList => [...prevList, newPlace]);
-        console.log("장소 추가:", newPlace);
-        
-        // 알림 표시
-        alert(`"${newPlace}" 여행지가 추가되었습니다!`);
-        setPlaceName(""); // 장소 이름 초기화
+            // 장소 목록과 list 상태 모두 업데이트
+            const newPlace = placeName;
+            
+            // placeList에 추가
+            setPlaceList(prevList => [...prevList, newPlace]);
+            
+            // list에도 직접 추가 (이 부분이 중요!)
+            setList(prevList => [...prevList, newPlace]);
+            
+            // 알림 표시
+            alert(`"${newPlace}" 여행지가 추가되었습니다!`);
+            setPlaceName(""); // 장소 이름 초기화
         }
     };
-
+    
     // 장소 목록에서 특정 장소를 삭제하는 함수
     const handleDeleteFromTodoList = (index) => {
         setPlaceList((prevList) => prevList.filter((_, i) => i !== index));  // 장소 목록에서 삭제
@@ -197,14 +201,17 @@ const Map = () => {
                             onClick={() => {
                                 // placeList에 항목이 있는지 확인
                                 if (placeList.length === 0) {
-                                alert("추가할 여행지가 없습니다. 먼저 장소를 검색하고 추가해주세요.");
-                                return;
+                                    alert("추가할 여행지가 없습니다. 먼저 장소를 검색하고 추가해주세요.");
+                                    return;
                                 }
                                 
-                                // placeList의 모든 항목을 list에 복사 (이전 list와 병합)
-                                console.log("추가 전 list:", list);
-                                setList(prevList => [...prevList, ...placeList]);
-                                console.log("추가 후 예상 list:", [...list, ...placeList]);
+                                // placeList의 모든 항목을 list에 복사 (중복 없이)
+                                setList(prevList => {
+                                    // 중복 항목을 제거한 새 배열 생성
+                                    const uniqueItems = [...new Set([...prevList, ...placeList])];
+                                    console.log("추가 후 list:", uniqueItems);
+                                    return uniqueItems;
+                                });
                                 
                                 // 추가 후 placeList 초기화
                                 setPlaceList([]);
@@ -212,7 +219,7 @@ const Map = () => {
                                 // 알림 표시
                                 alert("여행지가 추가되었습니다!");
                             }}
-                            >
+                        >
                             추가하기
                         </Button>
                     </h3>
