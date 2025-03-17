@@ -2,9 +2,19 @@ package com.korea.travel.security;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Optional;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.korea.travel.model.SocialEntity;
+import com.korea.travel.model.UserEntity;
+import com.korea.travel.persistence.SocialRepository;
+import com.korea.travel.persistence.UserRepository;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     private final TokenProvider tokenProvider;
+    private final UserRepository userRepository;
+    private final SocialRepository socialRepository;
     
     /**
      - 모든 HTTP 요청에 대해 실행되는 필터 메서드
@@ -82,9 +94,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
                 
-                UsernamePasswordAuthenticationToken authentication = 
-                    new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                // 사용자 객체를 찾아서 SecurityContext에 설정
+             // 변경된 부분: 사용자 객체를 찾아서 SecurityContext에 설정
+                if (tokenProvider.isSocialToken(token)) {
+                    // 소셜 로그인 사용자 검색 - Optional 처리
+                    Optional<SocialEntity> optionalSocialUser = socialRepository.findBySocialId(userId);
+                    if (optionalSocialUser.isPresent()) {
+                        SocialEntity socialUser = optionalSocialUser.get();
+                        // 소셜 사용자의 권한 설정
+                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(socialUser.getRoleKey());
+                        UsernamePasswordAuthenticationToken authentication = 
+                            new UsernamePasswordAuthenticationToken(socialUser, null, Collections.singleton(authority));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.getWriter().write("Social user not found with ID: " + userId);
+                        return;
+                    }
+                } else {
+                    // 일반 사용자 검색
+                    UserEntity user = userRepository.findByUserId(userId);
+                    if (user != null) {
+                        // 일반 사용자의 권한 설정 (기본적으로 USER 권한 부여)
+                        SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_USER");
+                        UsernamePasswordAuthenticationToken authentication = 
+                            new UsernamePasswordAuthenticationToken(user, null, Collections.singleton(authority));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.getWriter().write("User not found with ID: " + userId);
+                        return;
+                    }
+                }
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.getWriter().write("Token validation failed: " + e.getMessage());
