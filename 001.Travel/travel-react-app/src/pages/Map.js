@@ -215,9 +215,6 @@ const Map = () => {
                                 
                                 // 추가 후 placeList 초기화
                                 setPlaceList([]);
-                                
-                                // 알림 표시
-                                alert("여행지가 추가되었습니다!");
                             }}
                         >
                             추가하기
