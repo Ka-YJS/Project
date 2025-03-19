@@ -1,6 +1,7 @@
 package com.korea.travel.config;
 
 import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,8 +15,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.korea.travel.oauth.CustomOAuth2User;
 import com.korea.travel.oauth.CustomOAuth2UserServiceImpl;
+import com.korea.travel.persistence.SocialRepository;
+import com.korea.travel.persistence.UserRepository;
 import com.korea.travel.security.JwtAuthenticationFilter;
 import com.korea.travel.security.TokenProvider;
+
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -24,6 +28,8 @@ public class SecurityConfig {
 
    private final TokenProvider tokenProvider;
    private final CustomOAuth2UserServiceImpl customOAuth2UserService;
+   private final UserRepository userRepository;
+   private final SocialRepository socialRepository;
 
    @Bean
    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -71,7 +77,7 @@ public class SecurityConfig {
            .cors(cors -> cors.configurationSource(corsConfigurationSource()))  //CORS 설정 활성화
            //JWT 인증 필터 추가 요청이 들어올 때마다 JWT 토큰을 검증하고 인증처리하도록
            .addFilterBefore(
-               new JwtAuthenticationFilter(tokenProvider),
+               new JwtAuthenticationFilter(tokenProvider, userRepository, socialRepository),
                UsernamePasswordAuthenticationFilter.class
            );
 
