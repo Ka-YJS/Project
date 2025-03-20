@@ -145,8 +145,6 @@ const handleMarkerClick = (marker) => {
       // ListContext의 list 업데이트
       setList(updatedPlaces);
       
-      // 알림 표시
-      alert(`"${placeName}" 여행지가 추가되었습니다!`);
     } else {
       alert("이미 추가된 여행지입니다.");
     }
