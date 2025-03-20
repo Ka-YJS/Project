@@ -20,23 +20,21 @@ const PostDetail = () => {
 
     // 인증 토큰 일관되게 가져오기
     const getAuthToken = () => {
-        // user.token이 가장 신뢰할 수 있는 소스
-        if (user && user.token) {
-            return user.token;
+        try {
+            // 토큰 소스 확인
+            const token = user?.token || user?.accessToken || localStorage.getItem('accessToken');
+            
+            if (!token) {
+                console.error("인증 토큰이 없습니다.");
+                return null;
+            }
+            
+            // Bearer 접두사 처리
+            return token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+        } catch (error) {
+            console.error("토큰 처리 중 오류:", error);
+            return null;
         }
-        
-        // 그 다음 accessToken 확인
-        if (user && user.accessToken) {
-            return user.accessToken;
-        }
-        
-        // 마지막으로 localStorage 확인
-        const storedToken = localStorage.getItem('accessToken');
-        if (storedToken) {
-            return storedToken;
-        }
-        
-        return null;
     };
 
     // 사용자 ID 가져오기 - 일관된 방식
@@ -104,19 +102,26 @@ const PostDetail = () => {
                 return;
             }
             
-            // Bearer 접두사 처리
-            const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
-            
+            // API 호출
             const response = await axios.get(`http://${config.IP_ADD}/travel/likes/${id}/isLiked`, {
                 headers: { 
-                    Authorization: authHeader,
+                    Authorization: token,
                     Accept: '*/*'
                 },
                 withCredentials: true
             });
-            setIsLiked(response.data); // 좋아요 상태 설정
+            setIsLiked(response.data);
         } catch (error) {
             console.error("Error fetching like status:", error);
+            
+            // 401 에러 체크 (로그인 필요)
+            if (error.response?.status === 401) {
+                console.error("인증 정보가 유효하지 않습니다.");
+                // 여기서는 자동 리다이렉트 하지 않음
+            }
+            
+            // 에러 발생 시 기본값으로 처리
+            setIsLiked(false);
         }
     };
 
@@ -130,34 +135,38 @@ const PostDetail = () => {
                 return;
             }
             
-            // Bearer 접두사 처리
-            const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
-            
-            console.log("isLiked"+isLiked)
             const url = `http://${config.IP_ADD}/travel/likes/${id}`;
-            const method = isLiked ? "delete" : "post"; // Toggle between POST and DELETE
-    
-            // Make the API request to toggle like status
-            const response = await axios({
-                method,
-                url,
-                headers: { Authorization: authHeader },
-                withCredentials: true
-            });
-    
-            setIsLiked(!isLiked);
-            if(isLiked){
-                setLikeCount(count=>count-1)
-            }else{
-                setLikeCount(count=>count+1)
-            }
-        } catch (error) {
-            console.error("Error updating like:", error);
+            const method = isLiked ? "delete" : "post";
             
-            // 토큰 오류 처리
-            if (error.response && error.response.status === 401) {
+            // API 호출 시도
+            await axios({ 
+                method, 
+                url, 
+                headers: { 
+                    Authorization: token,
+                    Accept: '*/*' 
+                },
+                withCredentials: true,
+                // 타임아웃 설정 추가
+                timeout: 10000
+            });
+            
+            // UI 상태 업데이트
+            setIsLiked(!isLiked);
+            setLikeCount(prevCount => isLiked ? prevCount - 1 : prevCount + 1);
+        } catch (error) {
+            console.error("좋아요 처리 중 오류:", error);
+            
+            // 네트워크 에러 확인
+            if (error.code === 'ECONNABORTED') {
+                alert("서버 응답 시간이 초과되었습니다. 나중에 다시 시도해주세요.");
+                return;
+            }
+            
+            // 인증 오류 처리
+            if (error.response?.status === 401) {
                 alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
-                navigate("/login");
+                navigate("/login", { replace: true });
                 return;
             }
             
@@ -171,19 +180,18 @@ const PostDetail = () => {
     }, [location]);
 
     useEffect(() => {
-        
         // id가 존재하는지 확인하고 초기 데이터 로드
-        if (id && id !== 'undefined' && user) {
-            // 정상 케이스: ID와 사용자 정보가 있을 때
+        if (id && id !== 'undefined' && id !== 'null' && !isNaN(id) && user) {
+            console.log("게시글 ID 확인:", id);
             getPostDetail();
             getLikeStatus();
         } else {
             // 에러 상황 세분화
-            if (!id || id === 'undefined') {
+            if (!id || id === 'undefined' || id === 'null' || isNaN(id)) {
                 console.error("유효하지 않은 게시글 ID:", id);
                 alert("게시글 정보를 찾을 수 없습니다.");
                 // 게시글 목록으로 리다이렉트
-                navigate('/post', { replace: true }); // replace: true로 이전 페이지를 대체
+                navigate('/post', { replace: true }); 
             } else if (!user) {
                 console.error("사용자 정보 없음");
                 alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
