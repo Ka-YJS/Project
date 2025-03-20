@@ -136,7 +136,9 @@ public class PostController {
         }
 
         PostDTO createdPost = postService.createPost(postDTO);
-        return ResponseEntity.ok(createdPost);
+        List<PostDTO> dtos = List.of(createdPost);
+        ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().data(dtos).build();
+        return ResponseEntity.ok(response);
     }
     
     
