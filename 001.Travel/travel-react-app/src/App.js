@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import axios from "axios";
 import HomeScreen from "./pages/HomeScreen";
 import MainScreen from "./pages/MainScreen";
 import Login from "./pages/Login";
@@ -18,6 +19,21 @@ import Logo from "./pages/Logo"
 import { CopyPlaceListContext } from "./context/CopyPlaceListContext";
 import MyPost from "./pages/MyPost";
 import { ListProvider } from "./context/ListContext"; // ListProvider 임포트 확인
+
+// axios 인터셉터 설정
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    // 401 오류 처리
+    if (error.response && error.response.status === 401) {
+      // 로컬 스토리지에서 토큰 제거
+      localStorage.removeItem('accessToken');
+      // 로그인 페이지로 리디렉션 (React Router 외부에서 실행되므로 window.location 사용)
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 function App() {
   const [placeList, setPlaceList] = useState([]);
