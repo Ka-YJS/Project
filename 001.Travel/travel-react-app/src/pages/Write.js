@@ -48,7 +48,7 @@ const Write = () => {
 
     // 사용자 ID 가져오기
     const getUserId = () => {
-        if (!user) return user.id || null;;
+        if (!user) return null;
         
         // 소셜 로그인인 경우 접두사 추가
         if (isSocialLogin && user.id) {
@@ -156,14 +156,11 @@ const Write = () => {
             // API 엔드포인트 확인
             const endpoint = `http://${config.IP_ADD}/travel/write/${userId}`;
             
-            // 헤더 설정 - multipart/form-data에서는 Content-Type 헤더를 명시적으로 설정하지 않아야 함
-            // axios가 자동으로 boundary 값을 설정함
+            // 헤더 설정
             const headers = {};
             
             // 토큰 처리 수정
             if (token) {
-                // 1. 토큰에 'Bearer ' 접두사가 이미 포함된 경우 그대로 사용
-                // 2. 접두사가 없는 경우 추가
                 headers["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
             } else {
                 console.error("토큰이 없습니다. 인증이 불가능합니다.");
@@ -172,15 +169,36 @@ const Write = () => {
                 return;
             }
             
-            // Axios 요청 설정 수정 - withCredentials를 true로 설정하여 쿠키 전송
+            // Axios 요청
             const response = await axios.post(endpoint, formData, {
                 headers: headers,
                 withCredentials: true
             });
         
             console.log("Response:", response);
-            alert("글이 저장되었습니다!");
-            navigate(`/postdetail/${response.data.postId}`);
+            
+            // 응답 데이터 구조 확인 및 로깅
+            console.log("Response data structure:", JSON.stringify(response.data));
+            
+            if (response.data && response.data.postId) {
+                // 직접 반환된 PostDTO
+                alert("글이 저장되었습니다!");
+                navigate(`/postdetail/${response.data.postId}`);
+            } else if (response.data && response.data.data && response.data.data[0] && response.data.data[0].postId) {
+                // ResponseDTO로 감싸진 배열 형태
+                alert("글이 저장되었습니다!");
+                navigate(`/postdetail/${response.data.data[0].postId}`);
+            } else if (response.data && response.data.data && response.data.data.postId) {
+                // ResponseDTO로 감싸진 단일 객체 형태
+                alert("글이 저장되었습니다!");
+                navigate(`/postdetail/${response.data.data.postId}`);
+            } else {
+                // postId를 찾을 수 없을 경우
+                console.error("게시글 ID를 찾을 수 없습니다:", response.data);
+                alert("글이 저장되었지만 상세 페이지로 이동할 수 없습니다. 게시글 목록으로 이동합니다.");
+                navigate("/post");
+            }
+
         } catch (error) {
             console.error("Error saving post:", error);
             
