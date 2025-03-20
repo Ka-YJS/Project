@@ -24,23 +24,21 @@ const Post = () => {
 
     // 인증 토큰 일관되게 가져오기
     const getAuthToken = () => {
-        // user.token이 가장 신뢰할 수 있는 소스
-        if (user && user.token) {
-            return user.token;
+        try {
+            // 토큰 소스 확인
+            const token = user?.token || user?.accessToken || localStorage.getItem('accessToken');
+            
+            if (!token) {
+                console.error("인증 토큰이 없습니다.");
+                return null;
+            }
+            
+            // Bearer 접두사 처리
+            return token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+        } catch (error) {
+            console.error("토큰 처리 중 오류:", error);
+            return null;
         }
-        
-        // 그 다음 accessToken 확인
-        if (user && user.accessToken) {
-            return user.accessToken;
-        }
-        
-        // 마지막으로 localStorage 확인
-        const storedToken = localStorage.getItem('accessToken');
-        if (storedToken) {
-            return storedToken;
-        }
-        
-        return null;
     };
 
     // 사용자 ID 가져오기 - 일관된 방식
@@ -78,6 +76,9 @@ const Post = () => {
                         Accept: '*/*'
                     },
                     withCredentials: true
+                }).catch(error => {
+                    console.error(`Error fetching like status for post ${post.postId}:`, error);
+                    return { data: false }; // 에러 발생 시 기본값 반환
                 })
             );
 
@@ -96,11 +97,13 @@ const Post = () => {
             
             // 토큰 오류 처리
             if (error.response && error.response.status === 401) {
-                alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
-                navigate("/login");
+            // 토큰 제거 추가 (선택사항)
+            localStorage.removeItem('accessToken');
+            alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
+            navigate("/login", { replace: true }); // replace: true 추가
             }
-        }
-    };
+                }
+        };
 
     // 컴포넌트 마운트 시 list 초기화 추가
     useEffect(() => {
