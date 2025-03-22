@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.korea.travel.dto.SocialDTO;
 import com.korea.travel.model.SocialEntity;
+import com.korea.travel.model.UserEntity;
 import com.korea.travel.security.TokenProvider;
 import com.korea.travel.service.SocialService;
 
@@ -105,6 +106,56 @@ public class SocialController {
     public ResponseEntity<Boolean> checkSocialId(@RequestParam String socialId) {
         log.info("Checking socialId existence: {}", socialId);
         return ResponseEntity.ok(socialService.existsBySocialId(socialId));
+    }
+    
+    // 사용자 ID 변환 엔드포인트 추가 - 소셜 ID를 시스템 내 ID로 변환
+    @GetMapping("/convert-id/{socialId}")
+    public ResponseEntity<?> convertToUserId(@PathVariable String socialId) {
+        log.info("Converting socialId to userId: {}", socialId);
+        try {
+            UserEntity userEntity = socialService.createOrGetUserEntityFromSocialId(socialId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("userId", userEntity.getId());
+            response.put("userNickname", userEntity.getUserNickName());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error converting socialId to userId: ", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    // 시스템에서 사용 가능한 소셜 ID 형식 반환
+    @GetMapping("/format-id/{socialId}")
+    public ResponseEntity<?> formatSocialId(@PathVariable String socialId) {
+        log.info("Formatting socialId for system use: {}", socialId);
+        try {
+            // 소셜 사용자 조회
+            SocialEntity entity = socialService.findBySocialIdSafe(socialId);
+            if (entity != null) {
+                Map<String, Object> response = new HashMap<>();
+                
+                // 소셜 제공자에 따라 접두사 추가
+                String formattedId;
+                if (entity.getProvider() != null && entity.getProvider().equalsIgnoreCase("GOOGLE")) {
+                    formattedId = "google_" + entity.getSocialId();
+                } else if (entity.getProvider() != null && entity.getProvider().equalsIgnoreCase("KAKAO")) {
+                    formattedId = "kakao_" + entity.getSocialId();
+                } else {
+                    formattedId = "social_" + entity.getSocialId();
+                }
+                
+                response.put("originalId", entity.getSocialId());
+                response.put("formattedId", formattedId);
+                response.put("name", entity.getName());
+                
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body("Social user not found with ID: " + socialId);
+            }
+        } catch (Exception e) {
+            log.error("Error formatting socialId: ", e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     
     // 예외 처리
