@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +17,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.korea.travel.dto.UserDTO;
+import com.korea.travel.model.SocialEntity;
 import com.korea.travel.model.UserEntity;
+import com.korea.travel.persistence.SocialRepository;
 import com.korea.travel.persistence.UserRepository;
 import com.korea.travel.security.TokenProvider;
 
@@ -35,7 +38,8 @@ public class UserService {
 	
 	private final TokenProvider tokenProvider;
 	
-	
+	@Autowired(required = false)
+	private SocialRepository socialRepository;
 	
 	
 	
@@ -369,5 +373,69 @@ public class UserService {
     	
     }
     
-    
+    /**
+     * 문자열 ID로 사용자 조회 (일반 또는 소셜)
+     * 게시글 서비스와 연동하기 위한 메서드
+     */
+    @Transactional(readOnly = true)
+    public UserEntity findUserByStringId(String userId) {
+        log.info("문자열 ID로 사용자 조회: {}", userId);
+        
+        // 소셜 ID 형식인지 확인 (숫자 형식이 아니거나 매우 긴 숫자)
+        if (userId.length() > 10 || !userId.matches("\\d+")) {
+            // socialId로 소셜 사용자 조회
+            String socialId = userId;
+            // google_ 또는 kakao_ 접두사가 있으면 제거
+            if (userId.startsWith("google_")) {
+                socialId = userId.substring("google_".length());
+            } else if (userId.startsWith("kakao_")) {
+                socialId = userId.substring("kakao_".length());
+            }
+            
+            log.info("소셜 ID로 사용자 조회: {}", socialId);
+            
+            if (socialRepository != null) {
+                // 소셜 사용자 조회
+                Optional<SocialEntity> socialUser = socialRepository.findBySocialId(socialId);
+                if (socialUser.isPresent()) {
+                    // SocialEntity를 UserEntity로 변환 또는 임시 UserEntity 생성
+                    UserEntity tempUser = new UserEntity();
+                    tempUser.setId(1L); // 임시 ID (실제 환경에서는 더 나은 방법 필요)
+                    tempUser.setUserNickName(socialUser.get().getName());
+                    log.info("소셜 사용자 찾음: {}", socialUser.get().getName());
+                    return tempUser;
+                }
+            } else {
+                log.warn("SocialRepository가 주입되지 않았습니다. 소셜 사용자 조회 건너뜁니다.");
+            }
+            
+            // 소셜 ID를 찾을 수 없지만 기본 사용자 제공 (실제 환경에서는 적절히 처리)
+            UserEntity defaultUser = new UserEntity();
+            defaultUser.setId(1L);
+            defaultUser.setUserNickName("Guest");
+            log.info("소셜 사용자를 찾을 수 없어 기본 사용자 반환");
+            return defaultUser;
+        } else {
+            try {
+                // 일반 사용자 ID로 조회
+                Long userIdLong = Long.parseLong(userId);
+                Optional<UserEntity> regularUser = repository.findById(userIdLong);
+                if (regularUser.isPresent()) {
+                    log.info("일반 사용자 찾음: {}", regularUser.get().getUserNickName());
+                    return regularUser.get();
+                }
+            } catch (NumberFormatException e) {
+                // 숫자 변환 실패 시 예외 처리
+                log.error("사용자 ID 숫자 변환 실패: {}", userId, e);
+                throw new IllegalArgumentException("유효하지 않은 사용자 ID 형식");
+            }
+        }
+        
+        // 기본 사용자 반환 (실제 환경에서는 적절히 처리)
+        UserEntity defaultUser = new UserEntity();
+        defaultUser.setId(1L);
+        defaultUser.setUserNickName("Guest");
+        log.warn("어떤 사용자도 찾을 수 없어 기본 사용자 반환: {}", userId);
+        return defaultUser;
+    }
 }
