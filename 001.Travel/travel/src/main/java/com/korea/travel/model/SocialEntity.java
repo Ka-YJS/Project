@@ -1,9 +1,6 @@
 package com.korea.travel.model;
-
 import java.time.LocalDateTime;
-
 import com.korea.travel.security.SocialRole;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -101,5 +98,13 @@ public class SocialEntity {
         }
         log.info("Creating new social entity - socialId: {}, name: {}, email: {}", 
                 socialId, name, email);
+    }
+    
+    // Provider 문자열 반환 메소드 - SocialController에서 필요함
+    public String getProvider() {
+        if (authProvider == null) {
+            return null;
+        }
+        return authProvider.name();
     }
 }
