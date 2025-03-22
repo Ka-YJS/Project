@@ -2,10 +2,12 @@ package com.korea.travel.controller;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.HashMap;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.korea.travel.dto.ResponseDTO;
 import com.korea.travel.dto.UserDTO;
+import com.korea.travel.model.UserEntity;
 import com.korea.travel.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -253,5 +256,46 @@ public class UserController {
     	
     }
     
-
+    // 소셜 사용자 프로필 조회
+    @GetMapping("/social/profile/{socialId}")
+    public ResponseEntity<?> getSocialUserProfile(@PathVariable String socialId) {
+        log.info("소셜 사용자 프로필 조회: {}", socialId);
+        try {
+            // UserService의 findUserByStringId 메서드를 통해 소셜 사용자 정보 가져오기
+            UserEntity user = service.findUserByStringId(socialId);
+            
+            // UserDTO로 변환
+            UserDTO userDTO = UserDTO.builder()
+                .id(user.getId())
+                .userNickName(user.getUserNickName())
+                .userName(user.getUserName())
+                .userProfileImage(user.getUserProfileImage())
+                .build();
+            
+            return ResponseEntity.ok(userDTO);
+        } catch (Exception e) {
+            log.error("소셜 사용자 프로필 조회 중 오류: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    // 사용자 ID 확인 (일반/소셜 사용자 모두 지원)
+    @GetMapping("/user/validate/{userId}")
+    public ResponseEntity<?> validateUserId(@PathVariable String userId) {
+        log.info("사용자 ID 유효성 검증: {}", userId);
+        try {
+            UserEntity user = service.findUserByStringId(userId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("valid", true);
+            response.put("userId", user.getId());
+            response.put("userNickName", user.getUserNickName());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("사용자 ID 검증 중 오류: {}", e.getMessage());
+            Map<String, Object> response = new HashMap<>();
+            response.put("valid", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
 }
