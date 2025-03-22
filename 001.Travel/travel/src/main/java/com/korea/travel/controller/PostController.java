@@ -65,10 +65,16 @@ public class PostController {
     
     // 마이 게시판 조회
     @GetMapping("/myPosts/{userId}")
-    public ResponseEntity<?> getMyPosts(@PathVariable Long userId){
-    	List<PostDTO> dtos = postService.getMyPosts(userId);
-        ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().data(dtos).build();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> getMyPosts(@PathVariable String userId){
+        try {
+            // 수정된 서비스 메서드 호출
+            List<PostDTO> dtos = postService.getMyPostsByStringId(userId);
+            ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().data(dtos).build();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("마이 게시판 조회 중 오류: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("조회 중 오류 발생: " + e.getMessage());
+        }
     }
     
     // 게시글 한 건 조회
@@ -103,42 +109,40 @@ public class PostController {
     // 게시글 작성 + 이미지 업로드
     @PostMapping(value = "/write/{userId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createPost(
-    		@PathVariable Long userId,
+    		@PathVariable String userId,  // Long에서 String으로 변경
             @RequestPart("postTitle") String postTitle,
             @RequestPart("postContent") String postContent,
             @RequestPart(value = "placeList", required = false) String placeList,
             @RequestPart("userNickName") String userNickName,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
-    	// 유저 ID를 통해 UserEntity 가져오기
     	
-        Optional<UserEntity> userOptional = userRepository.findById(userId);
-        if (!userOptional.isPresent()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);  // 유저가 없으면 오류 반환
+        try {
+            // DTO 생성
+            PostDTO postDTO = new PostDTO();
+            postDTO.setPostTitle(postTitle);
+            postDTO.setPostContent(postContent);
+            if (placeList != null && !placeList.trim().isEmpty()) {
+                postDTO.setPlaceList(Arrays.asList(placeList.split(", ")));
+            }
+            postDTO.setUserNickname(userNickName);
+            postDTO.setPostCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+            
+            // 파일 처리
+            if (files != null && !files.isEmpty()) {
+                List<String> imageUrls = postService.saveFiles(files);
+                postDTO.setImageUrls(imageUrls);
+            }
+            
+            // 수정된 서비스 메서드 호출
+            PostDTO createdPost = postService.createPostWithStringUserId(userId, postDTO);
+            
+            List<PostDTO> dtos = List.of(createdPost);
+            ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().data(dtos).build();
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("게시글 작성 중 오류: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("게시글 작성 중 오류: " + e.getMessage());
         }
-        UserEntity user = userOptional.get();  // UserEntity 가져오기
-
-        // 서비스 호출 및 DTO 빌드
-        PostDTO postDTO = new PostDTO();
-        postDTO.setPostTitle(postTitle);
-        postDTO.setPostContent(postContent);
-        if (placeList != null && !placeList.trim().isEmpty()) {
-            postDTO.setPlaceList(Arrays.asList(placeList.split(", ")));
-        }
-        postDTO.setUserNickname(userNickName);
-        postDTO.setUserEntity(user);
-        postDTO.setPostCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-              
-        // 파일 저장 로직 호출
-        if (files != null && !files.isEmpty()) {
-        	List<String> imageUrls = postService.saveFiles(files);
-            imageUrls = postService.saveFiles(files);
-            postDTO.setImageUrls(imageUrls);
-        }
-
-        PostDTO createdPost = postService.createPost(postDTO);
-        List<PostDTO> dtos = List.of(createdPost);
-        ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().data(dtos).build();
-        return ResponseEntity.ok(response);
     }
     
     
