@@ -65,19 +65,19 @@ const Write = () => {
     };
 
     const getAuthToken = () => {
-        // localStorage에서 먼저 확인 (가장 신뢰할 수 있는 소스)
+        // localStorage에서 먼저 확인
         const storedToken = localStorage.getItem('accessToken');
         if (storedToken) {
-            return storedToken;
+            return storedToken.startsWith("Bearer ") ? storedToken : `Bearer ${storedToken}`;
         }
         
         // context에서 확인
         if (user && user.accessToken) {
-            return user.accessToken;
+            return user.accessToken.startsWith("Bearer ") ? user.accessToken : `Bearer ${user.accessToken}`;
         }
         
         if (user && user.token) {
-            return user.token;
+            return user.token.startsWith("Bearer ") ? user.token : `Bearer ${user.token}`;
         }
         
         return null;
@@ -156,12 +156,13 @@ const Write = () => {
             // API 엔드포인트 확인
             const endpoint = `http://${config.IP_ADD}/travel/write/${userId}`;
             
-            // 헤더 설정
+            // 헤더 설정 - Content-Type 지정 안 함 (FormData는 자동으로 multipart/form-data로 설정됨)
             const headers = {};
             
             // 토큰 처리 수정
+            const token = getAuthToken();
             if (token) {
-                headers["Authorization"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+                headers["Authorization"] = token;
             } else {
                 console.error("토큰이 없습니다. 인증이 불가능합니다.");
                 alert("인증 정보가 없습니다. 다시 로그인해주세요.");
@@ -201,32 +202,20 @@ const Write = () => {
 
         } catch (error) {
             console.error("Error saving post:", error);
-            
-            // 에러 상세 정보 로깅
-            if (error.response) {
-                console.log("Response Data:", error.response.data);
-                console.log("Response Status:", error.response.status);
-                console.log("Response Headers:", error.response.headers);
+        
+            // API 응답이 HTML 형식인지 확인
+            if (error.response && error.response.data && 
+                (typeof error.response.data === 'string') && 
+                error.response.data.includes('<!DOCTYPE html>')) {
                 
-                // 토큰 오류인 경우 구체적인 메시지 표시
-                if (error.response.status === 403) {
-                    if (error.response.data.includes("Token validation failed")) {
-                        alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
-                        // 토큰 삭제 및 리다이렉트
-                        localStorage.removeItem('accessToken');
-                        navigate("/login");
-                        return;
-                    } else if (error.response.data.includes("User ID in token does not match")) {
-                        alert("사용자 ID가 일치하지 않습니다. 다시 로그인해주세요.");
-                        localStorage.removeItem('accessToken');
-                        navigate("/login");
-                        return;
-                    }
-                }
+                alert("인증이 필요합니다. 다시 로그인해주세요.");
+                localStorage.removeItem('accessToken');
+                navigate("/login");
+                return;
             }
-            
-            alert("저장 중 오류가 발생했습니다. " + (error.response?.data || error.message));
-        }}
+                
+                alert("저장 중 오류가 발생했습니다. " + (error.response?.data || error.message));
+            }}
 
     // 취소 버튼 핸들러
     const handleCancel = () => {
