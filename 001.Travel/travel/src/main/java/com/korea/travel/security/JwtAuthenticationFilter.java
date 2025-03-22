@@ -58,6 +58,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
            return;
        }
        
+       // 조회성 엔드포인트 확인 (인증 실패해도 진행 가능)
+       boolean isPublicReadEndpoint = 
+           (requestURI.startsWith("/travel/posts") && request.getMethod().equals("GET")) ||
+           (requestURI.startsWith("/travel/likes") && request.getMethod().equals("GET"));
+       
        String token = request.getHeader("Authorization");
        
        if (token != null && token.startsWith("Bearer ")) {
@@ -75,8 +80,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
                 
                 if (userId == null || userId.isEmpty()) {
+                    // 조회성 엔드포인트면 인증 없이 진행
+                    if (isPublicReadEndpoint) {
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                    
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.getWriter().write("Invalid user ID in token");
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"error\":\"Invalid user ID in token\"}");
                     return;
                 }
                 
@@ -89,13 +101,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // 토큰에서 추출한 userId와 URL에서 추출한 userId 비교
                 if (pathUserId != null && !pathUserId.equals(userId) && !isCompatibleId(pathUserId, userId)) {
+                    // 조회성 엔드포인트면 인증 없이 진행
+                    if (isPublicReadEndpoint) {
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                    
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.getWriter().write("User ID in token does not match URL path ID");
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"error\":\"User ID in token does not match URL path ID\"}");
                     return;
                 }
                 
                 // 사용자 객체를 찾아서 SecurityContext에 설정
-             // 변경된 부분: 사용자 객체를 찾아서 SecurityContext에 설정
+                // 변경된 부분: 사용자 객체를 찾아서 SecurityContext에 설정
                 if (tokenProvider.isSocialToken(token)) {
                     // 소셜 로그인 사용자 검색 - Optional 처리
                     Optional<SocialEntity> optionalSocialUser = socialRepository.findBySocialId(userId);
@@ -107,8 +126,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(socialUser, null, Collections.singleton(authority));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     } else {
+                        // 조회성 엔드포인트면 인증 없이 진행
+                        if (isPublicReadEndpoint) {
+                            filterChain.doFilter(request, response);
+                            return;
+                        }
+                        
                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        response.getWriter().write("Social user not found with ID: " + userId);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"error\":\"Social user not found with ID: " + userId + "\"}");
                         return;
                     }
                 } else {
@@ -121,20 +147,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(user, null, Collections.singleton(authority));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     } else {
+                        // 조회성 엔드포인트면 인증 없이 진행
+                        if (isPublicReadEndpoint) {
+                            filterChain.doFilter(request, response);
+                            return;
+                        }
+                        
                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        response.getWriter().write("User not found with ID: " + userId);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"error\":\"User not found with ID: " + userId + "\"}");
                         return;
                     }
                 }
             } catch (Exception e) {
+                // 조회성 엔드포인트면 인증 없이 진행
+                if (isPublicReadEndpoint) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+                
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.getWriter().write("Token validation failed: " + e.getMessage());
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\":\"Token validation failed: " + e.getMessage() + "\"}");
                 return;
             }
        } else {
            // 토큰이 없는 요청에 대한 처리
+           // 조회성 엔드포인트면 인증 없이 진행
+           if (isPublicReadEndpoint) {
+               filterChain.doFilter(request, response);
+               return;
+           }
+           
            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-           response.getWriter().write("Authorization token is missing");
+           response.setContentType("application/json;charset=UTF-8");
+           response.getWriter().write("{\"error\":\"Authorization token is missing\"}");
            return;
        }
        
