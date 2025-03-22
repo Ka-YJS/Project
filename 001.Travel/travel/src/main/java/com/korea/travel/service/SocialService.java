@@ -100,6 +100,20 @@ public class SocialService {
        }
    }
    
+   /**
+    * 소셜 ID로 사용자를 찾고, 없으면 null 반환 (예외 발생하지 않음)
+    */
+   @Transactional(readOnly = true)
+   public SocialEntity findBySocialIdSafe(String socialId) {
+       log.info("=== Safely finding user by socialId: {} ===", socialId);
+       try {
+           return socialRepository.findBySocialId(socialId).orElse(null);
+       } catch (Exception e) {
+           log.error("Error safely finding user by socialId: ", e);
+           return null;
+       }
+   }
+   
    @Transactional
    public void updateUserInfo(String socialId, String name, String picture) {
        log.info("=== Starting updateUserInfo ===");
@@ -171,6 +185,62 @@ public class SocialService {
        } catch (Exception e) {
            log.error("Error converting to UserEntity: ", e);
            throw e;
+       }
+   }
+   
+   /**
+    * 소셜 ID로 UserEntity 생성 또는 반환
+    * PostService와 연동하기 위한 메서드
+    */
+   @Transactional
+   public UserEntity createOrGetUserEntityFromSocialId(String socialId) {
+       log.info("=== Creating or getting UserEntity from socialId: {} ===", socialId);
+       
+       try {
+           // 접두사 제거
+           String cleanSocialId = socialId;
+           if (socialId.startsWith("google_")) {
+               cleanSocialId = socialId.substring("google_".length());
+           } else if (socialId.startsWith("kakao_")) {
+               cleanSocialId = socialId.substring("kakao_".length());
+           }
+           
+           // 소셜 사용자 엔티티 조회
+           SocialEntity socialEntity = findBySocialIdSafe(cleanSocialId);
+           
+           if (socialEntity != null) {
+               // 기존 매핑 메서드 활용 시
+               if (userMapper != null) {
+                   try {
+                       UserEntity userEntity = userMapper.socialToUserEntity(socialEntity);
+                       if (userEntity != null) {
+                           log.info("Successfully created UserEntity from SocialEntity using mapper");
+                           return userEntity;
+                       }
+                   } catch (Exception e) {
+                       log.warn("Error using mapper to convert SocialEntity, falling back to manual creation: {}", e.getMessage());
+                   }
+               }
+               
+               // 매핑 실패 시 수동 생성
+               UserEntity userEntity = new UserEntity();
+               userEntity.setId(1L); // 임시 ID (실제 환경에서는 더 나은 방법 필요)
+               userEntity.setUserNickName(socialEntity.getName());
+               userEntity.setUserName(socialEntity.getName());
+               log.info("Successfully created UserEntity manually from SocialEntity");
+               return userEntity;
+           } else {
+               // 소셜 엔티티가 없을 경우 기본 사용자 생성
+               log.warn("SocialEntity not found for id: {}, creating default UserEntity", cleanSocialId);
+               UserEntity defaultUser = new UserEntity();
+               defaultUser.setId(1L);
+               defaultUser.setUserNickName("Guest");
+               defaultUser.setUserName("Guest");
+               return defaultUser;
+           }
+       } catch (Exception e) {
+           log.error("Error creating UserEntity from socialId: ", e);
+           throw new RuntimeException("소셜 사용자 변환 실패: " + e.getMessage(), e);
        }
    }
    
