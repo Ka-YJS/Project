@@ -48,30 +48,52 @@ const Write = () => {
 
     // 사용자 ID 가져오기
     const getUserId = () => {
-        if (!user) return null;
+
+        if (!user) {
+            console.error("사용자 정보가 없습니다");
+            return null;
+        }
+        
+        console.log("현재 사용자 정보:", user);
         
         // 소셜 로그인인 경우 접두사 추가
         if (isSocialLogin && user.id) {
+            
             // 소셜 로그인 제공자에 따라 접두사 추가
             const provider = user.authProvider?.toLowerCase() || 'social';
             return `${provider}_${user.id}`;
+
+            return user.id;
         }
         
         // 일반 로그인
-        if (user.id) return user.id;
-        if (user.userid) return user.userid;
+        if (user.id) {
+            console.log("일반 사용자 ID:", user.id);
+            return user.id;
+        }
+        if (user.userid) {
+            console.log("일반 사용자 ID (userid):", user.userid);
+            return user.userid;
+        }
         
+        console.error("유효한 사용자 ID를 찾을 수 없습니다");
         return null;
     };
 
     const getAuthToken = () => {
         // localStorage에서 먼저 확인
         const storedToken = localStorage.getItem('accessToken');
+        
+        // 토큰 디버깅
+        console.log("저장된 토큰:", storedToken);
+        
         if (storedToken) {
             return storedToken.startsWith("Bearer ") ? storedToken : `Bearer ${storedToken}`;
         }
         
-        // context에서 확인
+        // 다른 소스에서 토큰 확인 및 로깅
+        console.log("User 객체:", user);
+        
         if (user && user.accessToken) {
             return user.accessToken.startsWith("Bearer ") ? user.accessToken : `Bearer ${user.accessToken}`;
         }
@@ -116,7 +138,9 @@ const Write = () => {
         if (!postTitle || !postContent) {
             alert("제목과 내용을 모두 입력해주세요.");
             return;
-        }        
+        }
+        
+        console.log("localStorage에 저장된 토큰:", localStorage.getItem('accessToken'));
 
         const token = getAuthToken();
             if (!token) {
@@ -172,7 +196,10 @@ const Write = () => {
             
             // Axios 요청
             const response = await axios.post(endpoint, formData, {
-                headers: headers,
+                headers: {
+                    Authorization: token,
+                    'Accept': 'application/json'
+                },
                 withCredentials: true
             });
         
