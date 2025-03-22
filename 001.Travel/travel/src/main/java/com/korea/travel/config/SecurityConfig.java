@@ -4,10 +4,12 @@ import java.util.Arrays;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -20,6 +22,7 @@ import com.korea.travel.persistence.UserRepository;
 import com.korea.travel.security.JwtAuthenticationFilter;
 import com.korea.travel.security.TokenProvider;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -48,10 +51,20 @@ public class SecurityConfig {
                    "/social/**",  // OAuth2 엔드포인트도 /social로 통일
                    "/api/social/**",
                    "/login/oauth2/code/google",
-                   "/static/**"
+                   "/static/**",
+                   "/travel/posts/**",  // 게시글 조회는 인증 없이 허용
+                   "/travel/likes/**"   // 좋아요 조회는 인증 없이 허용
                ).permitAll()  //경로는 인증 없이 허용
                .anyRequest().authenticated()  // 그 외 요청은 인증 필요
            )//authorizeHttpRequests
+           .exceptionHandling(ex -> ex
+               .authenticationEntryPoint((request, response, authException) -> {
+                   // 인증 실패 시 JSON 형식으로 응답
+                   response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                   response.setContentType("application/json;charset=UTF-8");
+                   response.getWriter().write("{\"error\":\"인증이 필요합니다\"}");
+               })
+           )
            .oauth2Login(oauth2 -> oauth2  // OAuth2 로그인 활성화
                .userInfoEndpoint(userInfo -> userInfo
                    .userService(customOAuth2UserService))  // OAuth2 사용자 서비스 설정
