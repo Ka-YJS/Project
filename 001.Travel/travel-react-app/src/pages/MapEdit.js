@@ -120,7 +120,7 @@ const MapEdit = () => {
                     <Autocomplete onLoad={handleSearchBoxLoad} onPlaceChanged={handlePlaceChanged}>
                         <input
                             type="text"
-                            placeholder="장소 또는 주소 검색 후 엔터"
+                            placeholder="장소 또는 주소 검색 후 클릭"
                             className="map-search-input"
                         />
                     </Autocomplete>
