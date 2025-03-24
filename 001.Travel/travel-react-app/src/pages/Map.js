@@ -118,9 +118,6 @@ const Map = () => {
             // list에도 직접 추가 (이 부분이 중요!)
             setList(prevList => [...prevList, newPlace]);
             
-            // 알림 표시
-            alert(`"${newPlace}" 여행지가 추가되었습니다!`);
-            setPlaceName(""); // 장소 이름 초기화
         }
     };
     
@@ -141,7 +138,7 @@ const Map = () => {
                     <Autocomplete onLoad={handleSearchBoxLoad} onPlaceChanged={handlePlaceChanged}>
                         <input
                             type="text"
-                            placeholder="장소 또는 주소 검색 후 엔터"
+                            placeholder="장소 또는 주소 검색 후 클릭"
                             className="map-search-input"
                         />
                     </Autocomplete>
