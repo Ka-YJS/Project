@@ -176,14 +176,6 @@ const handleMarkerClick = (marker) => {
       width: "100vw",
       minHeight: "100vh",
     }}>
-      {/* 디버깅 정보 표시 */}
-      <div style={{ background: '#f5f5f5', padding: '10px', margin: '10px', border: '1px solid #ddd' }}>
-        <p>현재 list 배열 상태: {JSON.stringify(list)}</p>
-        <p>list 배열 길이: {list.length}</p>
-        <button onClick={addTestPlace} style={{ padding: '5px', marginTop: '5px' }}>
-          테스트 여행지 추가 (디버깅용)
-        </button>
-      </div>
 
       <div style={{ display: 'flex', width: '100%' }}>
         <div style={{
