@@ -73,15 +73,18 @@ public class PostService {
     
     // 마이 게시판 조회 - String ID 지원
     public List<PostDTO> getMyPostsByStringId(String userId) {
+        logger.info("마이 게시판 조회 - 문자열 ID: {}, 타입: {}", userId, userId.getClass().getName());
         try {
             UserEntity user = findUserByStringId(userId);
+            logger.info("사용자 조회 성공: ID={}, 닉네임={}", user.getId(), user.getUserNickName());
             
             List<PostEntity> posts = postRepository.findByUserEntity(user);
+            logger.info("게시글 조회 결과: {}개 게시글 발견", posts.size());
             return posts.stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            logger.error("게시글 조회 중 오류: {}", e.getMessage());
+            logger.error("게시글 조회 중 오류: {}", e.getMessage(), e);
             throw new RuntimeException("게시글 조회 중 오류: " + e.getMessage());
         }
     }
@@ -93,85 +96,133 @@ public class PostService {
     	
         Optional<PostEntity> board = postRepository.findById(id);
         if(board.isPresent()) {
+            logger.info("게시글 찾음: ID={}, 제목={}", id, board.get().getPostTitle());
         	return board.map(this::convertToDTO)
                     .orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
         }else {
+            logger.warn("게시글을 찾을 수 없음: ID={}", id);
         	throw new RuntimeException("게시글을 찾을 수 없습니다.");
 		}
     }
     
     // 게시글 생성
     public PostDTO createPost(PostDTO postDTO) {
+        logger.info("게시글 생성 시작: 제목={}, 작성자={}", postDTO.getPostTitle(), postDTO.getUserNickname());
         PostEntity savedEntity = postRepository.save(convertToEntity(postDTO));
+        logger.info("게시글 생성 완료: ID={}", savedEntity.getPostId());
         return convertToDTO(savedEntity);
     }
     
     // 게시글 생성 - String ID 지원
     public PostDTO createPostWithStringUserId(String userId, PostDTO postDTO) {
+        logger.info("문자열 ID로 게시글 생성 시작: userId={}, 타입={}", userId, userId.getClass().getName());
         try {
             // 통합 사용자 조회 서비스 사용
+            logger.info("사용자 조회 시도: ID={}", userId);
             UserEntity user = findUserByStringId(userId);
+            logger.info("사용자 조회 결과: ID={}, 닉네임={}", user.getId(), user.getUserNickName());
+            
             postDTO.setUserEntity(user);
+            logger.info("게시글 DTO에 사용자 엔티티 설정 완료");
             
             // 기존 기능 호출
             return createPost(postDTO);
         } catch (Exception e) {
-            logger.error("게시글 생성 중 오류: {}", e.getMessage());
+            logger.error("게시글 생성 중 오류: {}", e.getMessage(), e);
             throw new RuntimeException("게시글 생성 중 오류: " + e.getMessage());
         }
     }
 
     public List<String> saveFiles(List<MultipartFile> files) {
+        logger.info("파일 저장 시작: {}개 파일", files != null ? files.size() : 0);
         List<String> fileUrls = new ArrayList<>();
+        
+        if (files == null || files.isEmpty()) {
+            logger.info("저장할 파일이 없습니다");
+            return fileUrls;
+        }
+        
         for (MultipartFile file : files) {
             try {
-                String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename().replaceAll("[^a-zA-Z0-9._-]", "_");
-                Path filePath = Paths.get("/home/ubuntu/app/uploads/" + fileName);
+                String originalFilename = file.getOriginalFilename();
+                logger.info("파일 저장 중: 원본 파일명={}, 크기={}bytes", originalFilename, file.getSize());
+                
+                String fileName = UUID.randomUUID() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
+                Path uploadPath = Paths.get("/home/ubuntu/app/uploads/");
+                Path filePath = uploadPath.resolve(fileName);
+                
+                // 디렉토리 존재 확인 및 생성
+                if (!Files.exists(uploadPath)) {
+                    logger.info("업로드 디렉토리가 존재하지 않아 생성합니다: {}", uploadPath);
+                    Files.createDirectories(uploadPath);
+                }
+                
                 Files.write(filePath, file.getBytes());
-                fileUrls.add("/uploads/" + fileName); // 파일 접근 URL
+                String fileUrl = "/uploads/" + fileName;
+                fileUrls.add(fileUrl);
+                logger.info("파일 저장 완료: URL={}", fileUrl);
             } catch (IOException e) {
+                logger.error("파일 저장 중 오류 발생: {}", e.getMessage(), e);
                 throw new RuntimeException("파일 저장 중 오류 발생", e);
             }
         }
+        logger.info("총 {}개 파일 저장 완료", fileUrls.size());
         return fileUrls;
     }
     
     //게시글 수정
     public PostDTO updatePost(Long id, String postTitle, String postContent, List<String> placeListParsed, 
-    		String userNickName,List<MultipartFile> files, List<String> existingImageUrls) {
+    		String userNickName, List<MultipartFile> files, List<String> existingImageUrls) {
+        logger.info("게시글 수정 시작: ID={}, 제목={}", id, postTitle);
 		
     	PostEntity postEntity = postRepository.findById(id)
-		.orElseThrow(() -> new RuntimeException("게시글을 찾을 수 없습니다."));
+		.orElseThrow(() -> {
+            logger.warn("수정할 게시글을 찾을 수 없음: ID={}", id);
+            return new RuntimeException("게시글을 찾을 수 없습니다.");
+        });
 		
 		postEntity.setPostTitle(postTitle);
 		postEntity.setPostContent(postContent);
 		postEntity.setUserNickname(userNickName);
 		
 		if(placeListParsed != null && !placeListParsed.isEmpty()) {
+            logger.info("장소 목록 업데이트: {}", placeListParsed);
 			postEntity.setPlaceList(new ArrayList<>(placeListParsed));
-        }else {
+        } else {
+            logger.info("장소 목록 null로 설정");
         	postEntity.setPlaceList(null);
         }
 		
-		List<String> allImageUrls = new ArrayList<>(existingImageUrls);
+		List<String> allImageUrls = new ArrayList<>();
+        if (existingImageUrls != null) {
+            logger.info("기존 이미지 URL 추가: {}개", existingImageUrls.size());
+            allImageUrls.addAll(existingImageUrls);
+        }
 		
 		if (files != null && !files.isEmpty()) {
+            logger.info("새 이미지 파일 저장 시작: {}개", files.size());
 			List<String> newImageUrls = saveFiles(files);
 			allImageUrls.addAll(newImageUrls);
+            logger.info("새 이미지 URL 추가: {}개", newImageUrls.size());
 		}
 		
 		postEntity.setImageUrls(allImageUrls);
+        logger.info("총 이미지 URL 설정: {}개", allImageUrls.size());
 		
 		PostEntity updatedEntity = postRepository.save(postEntity);
+        logger.info("게시글 수정 완료: ID={}", updatedEntity.getPostId());
 		return convertToDTO(updatedEntity);
 	}    
     
     // 게시글 삭제
     public boolean deletePost(Long id) {
+        logger.info("게시글 삭제 시도: ID={}", id);
         if (postRepository.existsById(id)) {
             postRepository.deleteById(id);
+            logger.info("게시글 삭제 완료: ID={}", id);
             return true;
         }
+        logger.warn("삭제할 게시글을 찾을 수 없음: ID={}", id);
         return false;
     }
     
@@ -183,14 +234,18 @@ public class PostService {
         if (userId.length() > 10 || !userId.matches("\\d+")) {
             // socialId로 소셜 사용자 조회
             String socialId = userId;
+            String provider = "unknown";
+            
             // google_ 또는 kakao_ 접두사가 있으면 제거
             if (userId.startsWith("google_")) {
                 socialId = userId.substring("google_".length());
+                provider = "google";
             } else if (userId.startsWith("kakao_")) {
                 socialId = userId.substring("kakao_".length());
+                provider = "kakao";
             }
             
-            logger.info("소셜 ID로 사용자 조회: {}", socialId);
+            logger.info("소셜 ID로 사용자 조회: socialId={}, provider={}", socialId, provider);
             
             // 소셜 사용자 조회
             Optional<SocialEntity> socialUser = socialRepository.findBySocialId(socialId);
@@ -199,31 +254,37 @@ public class PostService {
                 UserEntity tempUser = new UserEntity();
                 tempUser.setId(1L); // 임시 ID (실제 환경에서는 더 나은 방법 필요)
                 tempUser.setUserNickName(socialUser.get().getName());
-                logger.info("소셜 사용자 찾음: {}", socialUser.get().getName());
+                logger.info("소셜 사용자 찾음: 이름={}, 변환된 임시 ID={}", socialUser.get().getName(), tempUser.getId());
                 return tempUser;
+            } else {
+                logger.warn("소셜 ID로 사용자를 찾을 수 없음: {}", socialId);
             }
         } else {
             try {
                 // 일반 사용자 ID로 조회
                 Long userIdLong = Long.parseLong(userId);
+                logger.info("일반 사용자 ID로 조회: {}", userIdLong);
+                
                 Optional<UserEntity> regularUser = userRepository.findById(userIdLong);
                 if (regularUser.isPresent()) {
-                    logger.info("일반 사용자 찾음: {}", regularUser.get().getUserNickName());
+                    logger.info("일반 사용자 찾음: ID={}, 닉네임={}", regularUser.get().getId(), regularUser.get().getUserNickName());
                     return regularUser.get();
+                } else {
+                    logger.warn("ID={}인 일반 사용자를 찾을 수 없음", userIdLong);
                 }
             } catch (NumberFormatException e) {
                 // 숫자 변환 실패 시 예외 처리
-                logger.error("사용자 ID 숫자 변환 실패: {}", userId);
-                throw new IllegalArgumentException("유효하지 않은 사용자 ID 형식");
+                logger.error("사용자 ID 숫자 변환 실패: {}", userId, e);
+                throw new IllegalArgumentException("유효하지 않은 사용자 ID 형식: " + e.getMessage());
             }
         }
         
-        logger.warn("사용자를 찾을 수 없음: {}", userId);
-        throw new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId);
+        logger.error("사용자를 찾을 수 없음: ID={}", userId);
+        throw new IllegalArgumentException("User with ID " + userId + " not found");
     }
 
     private PostDTO convertToDTO(PostEntity entity) {
-        return PostDTO.builder()
+        PostDTO dto = PostDTO.builder()
                 .postId(entity.getPostId())
                 .userId(entity.getUserEntity().getId())
                 .postTitle(entity.getPostTitle())
@@ -234,17 +295,16 @@ public class PostService {
                 .likes(likeRepository.countByPostEntity(entity))
                 .postCreatedAt(entity.getPostCreatedAt())
                 .build();
+        
+        logger.debug("엔티티->DTO 변환: ID={}, 제목={}", dto.getPostId(), dto.getPostTitle());
+        return dto;
     }
 
     private PostEntity convertToEntity(PostDTO dto) {
-        return PostEntity.builder()
+        PostEntity entity = PostEntity.builder()
                 .postTitle(dto.getPostTitle())
                 .postContent(dto.getPostContent())
                 .userNickname(dto.getUserNickname())
                 .placeList(dto.getPlaceList())
                 .imageUrls(dto.getImageUrls())
-                .postCreatedAt(dto.getPostCreatedAt())
-                .userEntity(dto.getUserEntity())
-                .build();
-    }
-}
+                .postCreatedAt(dto.getPost
