@@ -307,4 +307,11 @@ public class PostService {
                 .userNickname(dto.getUserNickname())
                 .placeList(dto.getPlaceList())
                 .imageUrls(dto.getImageUrls())
-                .postCreatedAt(dto.getPost
+                .postCreatedAt(dto.getPostCreatedAt())
+                .userEntity(dto.getUserEntity())
+                .build();
+        
+        logger.debug("DTO->엔티티 변환: 제목={}, 작성자={}", entity.getPostTitle(), entity.getUserNickname());
+        return entity;
+    }
+}
