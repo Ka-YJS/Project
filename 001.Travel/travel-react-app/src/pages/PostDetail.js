@@ -40,6 +40,15 @@ const PostDetail = () => {
     // 사용자 ID 가져오기 - 일관된 방식
     const getUserId = () => {
         if (!user) return null;
+        
+        // 소셜 로그인인 경우 접두사 추가
+        const isSocialLogin = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
+        if (isSocialLogin && user.id) {
+            const provider = user.authProvider?.toLowerCase() || 'social';
+            return `${provider}_${user.id}`;
+        }
+        
+        // 일반 로그인
         return user.id || null;
     };
 
@@ -79,7 +88,7 @@ const PostDetail = () => {
             // 토큰 오류 처리
             if (error.response && error.response.status === 401) {
                 alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
-                navigate("/login");
+                // navigate("/login");
                 return;
             }
             
@@ -114,13 +123,7 @@ const PostDetail = () => {
         } catch (error) {
             console.error("Error fetching like status:", error);
             
-            // 401 에러 체크 (로그인 필요)
-            if (error.response?.status === 401) {
-                console.error("인증 정보가 유효하지 않습니다.");
-                // 여기서는 자동 리다이렉트 하지 않음
-            }
-            
-            // 에러 발생 시 기본값으로 처리
+            // 401 에러 체크 (로그인 필요) - 리다이렉트 없이 에러 무시
             setIsLiked(false);
         }
     };
@@ -131,7 +134,7 @@ const PostDetail = () => {
             const token = getAuthToken();
             if (!token) {
                 alert("인증 정보가 없습니다. 다시 로그인해주세요.");
-                navigate("/login");
+                // navigate("/login");
                 return;
             }
             
@@ -166,7 +169,7 @@ const PostDetail = () => {
             // 인증 오류 처리
             if (error.response?.status === 401) {
                 alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
-                navigate("/login", { replace: true });
+                // navigate("/login", { replace: true });
                 return;
             }
             
@@ -191,11 +194,11 @@ const PostDetail = () => {
                 console.error("유효하지 않은 게시글 ID:", id);
                 alert("게시글 정보를 찾을 수 없습니다.");
                 // 게시글 목록으로 리다이렉트
-                navigate('/post', { replace: true }); 
+                // navigate('/post', { replace: true }); 
             } else if (!user) {
                 console.error("사용자 정보 없음");
                 alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
-                navigate('/login', { replace: true });
+                // navigate('/login', { replace: true });
             }
         }
     }, [id, user, navigate]); // navigate도 의존성 배열에 추가
