@@ -312,10 +312,6 @@ const Write = () => {
                     multiline
                     rows={2}
                 />
-                {/* 디버깅용 정보 - 개발 중에만 사용 */}
-                <div style={{fontSize: '12px', color: 'gray', marginTop: '4px'}}>
-                    list 상태: {Array.isArray(list) ? `배열 (${list.length}개 항목)` : `${typeof list}`}
-                </div>
             </div>
 
             {/* 내용 입력 */}
