@@ -23,13 +23,23 @@ const MyPost = () => {
     // 서버에서 게시물 가져오기
     const getMyPostList = async () => {
         try {
-            const response = await axios.get(`http://${config.IP_ADD}/travel/myPosts/${user.id}`, {
+            // 소셜 로그인 여부 확인
+            const isSocialLogin = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
+            
+            // 사용자 ID 준비 (소셜 로그인인 경우 접두사 추가)
+            let userId = user.id;
+            if (isSocialLogin) {
+                const provider = user.authProvider?.toLowerCase() || 'social';
+                userId = `${provider}_${user.id}`;
+            }
+            
+            const response = await axios.get(`http://${config.IP_ADD}/travel/myPosts/${userId}`, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                     Authorization: `Bearer ${user.token}`,
                 },
             });
-
+    
             const fetchedPosts = response.data.data;
 
             // 좋아요 상태 가져오기
@@ -65,15 +75,23 @@ const MyPost = () => {
             const isLiked = likedPosts[postId];
             const url = `http://${config.IP_ADD}/travel/likes/${postId}`;
             const method = isLiked ? "delete" : "post";
-
-            await axios({ method, url, headers: { Authorization: `Bearer ${user.token}` } });
-
+    
+            await axios({ 
+                method, 
+                url, 
+                headers: { 
+                    Authorization: `Bearer ${user.token}`,
+                    Accept: '*/*'
+                },
+                withCredentials: true
+            });
+    
             // 좋아요 상태 업데이트
             setLikedPosts((prev) => ({
                 ...prev,
                 [postId]: !isLiked,
             }));
-
+    
             // 게시물의 좋아요 수 업데이트
             setMyPostList((prev) =>
                 prev.map((post) =>
@@ -82,10 +100,17 @@ const MyPost = () => {
                     : post
                 )
             );
-
         } catch (error) {
             console.error("Error updating like:", error);
-            alert("좋아요 처리 중 문제가 발생했습니다.");
+            
+            // 오류 처리 개선
+            if (error.response && error.response.status === 401) {
+                console.error("인증 오류");
+                // 로그아웃 처리 없이 알림만
+                alert("인증 정보가 만료되었습니다.");
+            } else {
+                alert("좋아요 처리 중 문제가 발생했습니다.");
+            }
         }
     };
 
