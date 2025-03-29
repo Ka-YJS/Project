@@ -1,8 +1,9 @@
 package com.korea.travel.model;
 
-import org.apache.catalina.User;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,18 +23,23 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 public class LikeEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 고유 id
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id") // user_id 외래키
-    private UserEntity userEntity; // 좋아요를 누른 유저
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id") // post_id 외래키
-    private PostEntity postEntity; // 좋아요가 눌린 게시글
-
-    // 추가적인 메서드들이 필요하면 여기에 추가 가능
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id; // 고유 id
+   
+   @Column(name = "user_id")
+   private Long userId; // user_id 저장
+   
+   @Column(name = "user_type")
+   @Enumerated(EnumType.STRING)
+   private UserType userType; // 사용자 타입 (REGULAR 또는 SOCIAL)
+   
+   @ManyToOne(fetch = FetchType.LAZY)
+   @JoinColumn(name = "post_id")
+   private PostEntity postEntity; // 좋아요가 눌린 게시글
+   
+   // 사용자 타입 열거형
+   public enum UserType {
+       REGULAR, SOCIAL
+   }
 }
