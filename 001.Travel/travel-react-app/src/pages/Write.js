@@ -54,8 +54,6 @@ const Write = () => {
             return null;
         }
         
-        console.log("현재 사용자 정보:", user);
-        
         // 소셜 로그인인 경우 접두사 추가
         if (isSocialLogin && user.id) {
             
@@ -68,11 +66,9 @@ const Write = () => {
         
         // 일반 로그인
         if (user.id) {
-            console.log("일반 사용자 ID:", user.id);
             return user.id;
         }
         if (user.userid) {
-            console.log("일반 사용자 ID (userid):", user.userid);
             return user.userid;
         }
         
@@ -84,15 +80,9 @@ const Write = () => {
         // localStorage에서 먼저 확인
         const storedToken = localStorage.getItem('accessToken');
         
-        // 토큰 디버깅
-        console.log("저장된 토큰:", storedToken);
-        
         if (storedToken) {
             return storedToken.startsWith("Bearer ") ? storedToken : `Bearer ${storedToken}`;
         }
-        
-        // 다른 소스에서 토큰 확인 및 로깅
-        console.log("User 객체:", user);
         
         if (user && user.accessToken) {
             return user.accessToken.startsWith("Bearer ") ? user.accessToken : `Bearer ${user.accessToken}`;
@@ -140,8 +130,6 @@ const Write = () => {
             return;
         }
         
-        console.log("localStorage에 저장된 토큰:", localStorage.getItem('accessToken'));
-
         const token = getAuthToken();
             if (!token) {
                 alert("인증 정보가 없습니다. 다시 로그인해주세요.");
@@ -174,7 +162,6 @@ const Write = () => {
         try {
             // 폼 데이터 로깅 (디버깅용)
             for (let [key, value] of formData.entries()) {
-                console.log(key, value);
             }
             
             // API 엔드포인트 확인
@@ -203,10 +190,6 @@ const Write = () => {
                 withCredentials: true
             });
         
-            console.log("Response:", response);
-            
-            // 응답 데이터 구조 확인 및 로깅
-            console.log("Response data structure:", JSON.stringify(response.data));
             
             if (response.data && response.data.postId) {
                 // 직접 반환된 PostDTO
