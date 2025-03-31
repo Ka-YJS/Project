@@ -10,7 +10,7 @@ import config from "../Apikey";
 
 const Write = () => {
     const {user} = useContext(UserContext);
-    const {list} = useContext(ListContext);
+    const {list, setList} = useContext(ListContext);
     const [postTitle, setPostTitle] = useState("");
     const [postContent, setPostContent] = useState("");
     const [selectedFiles, setSelectedFiles] = useState([]); // 사용자가 선택한 파일들
@@ -27,13 +27,12 @@ const Write = () => {
         }
     }, [user]);
 
+    // list가 변경될 때마다 다른 필드 초기화하는 useEffect 제거
+    // 컴포넌트 마운트 시에만 필요한 초기화 작업을 위한 useEffect
     useEffect(() => {
-        // list가 변경될 때마다 다른 필드 초기화
-        setPostTitle("");
-        setPostContent("");
-        setSelectedFiles([]);
-        setPreviewUrls([]);
-    }, [list]); // list가 변경될 때마다 실행
+        // 컴포넌트가 마운트될 때 한 번만 실행
+        // 필요한 경우 초기화 코드를 넣을 수 있음
+    }, []); // 빈 의존성 배열로 컴포넌트 마운트 시에만 실행
 
     // 사용자 닉네임 가져오기 (소셜/일반 로그인 모두 지원)
     const getUserNickName = () => {
@@ -193,18 +192,50 @@ const Write = () => {
             
             if (response.data && response.data.postId) {
                 // 직접 반환된 PostDTO
+                // 저장 성공 후 모든 필드 초기화
+                setPostTitle("");
+                setPostContent("");
+                setSelectedFiles([]);
+                setPreviewUrls([]);
+                // 여행지 목록 초기화
+                setList([]);
+                
                 alert("글이 저장되었습니다!");
                 navigate(`/postdetail/${response.data.postId}`);
             } else if (response.data && response.data.data && response.data.data[0] && response.data.data[0].postId) {
                 // ResponseDTO로 감싸진 배열 형태
+                // 저장 성공 후 모든 필드 초기화
+                setPostTitle("");
+                setPostContent("");
+                setSelectedFiles([]);
+                setPreviewUrls([]);
+                // 여행지 목록 초기화
+                setList([]);
+                
                 alert("글이 저장되었습니다!");
                 navigate(`/postdetail/${response.data.data[0].postId}`);
             } else if (response.data && response.data.data && response.data.data.postId) {
                 // ResponseDTO로 감싸진 단일 객체 형태
+                // 저장 성공 후 모든 필드 초기화
+                setPostTitle("");
+                setPostContent("");
+                setSelectedFiles([]);
+                setPreviewUrls([]);
+                // 여행지 목록 초기화
+                setList([]);
+                
                 alert("글이 저장되었습니다!");
                 navigate(`/postdetail/${response.data.data.postId}`);
             } else {
                 // postId를 찾을 수 없을 경우
+                // 저장 성공 후 모든 필드 초기화
+                setPostTitle("");
+                setPostContent("");
+                setSelectedFiles([]);
+                setPreviewUrls([]);
+                // 여행지 목록 초기화
+                setList([]);
+                
                 console.error("게시글 ID를 찾을 수 없습니다:", response.data);
                 alert("글이 저장되었지만 상세 페이지로 이동할 수 없습니다. 게시글 목록으로 이동합니다.");
                 navigate("/post");
@@ -229,9 +260,15 @@ const Write = () => {
 
     // 취소 버튼 핸들러
     const handleCancel = () => {
-        setPostTitle("");
-        setPostContent("");
         if (window.confirm("글 작성을 취소하시겠습니까?")) {
+            // 모든 필드 초기화
+            setPostTitle("");
+            setPostContent("");
+            setSelectedFiles([]);
+            setPreviewUrls([]);
+            // 여행지 목록 초기화
+            setList([]);
+            
             alert("글 작성이 취소되었습니다.");
             navigate("/post");
         }
