@@ -20,58 +20,151 @@ const MyPost = () => {
     const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
     const postsPerPage = 10; // 페이지당 게시물 수
 
+    // 인증 토큰 일관되게 가져오기 (Post.js에서 가져온 방식)
+    const getAuthToken = () => {
+        try {
+            // 토큰 소스 확인
+            let token = user?.token || user?.accessToken || localStorage.getItem('accessToken');
+            
+            if (!token) {
+                console.error("인증 토큰이 없습니다.");
+                return null;
+            }
+            
+            // Bearer 접두사 처리
+            return token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+        } catch (error) {
+            console.error("토큰 처리 중 오류:", error);
+            return null;
+        }
+    };
+
+    // 사용자 ID 가져오기 - 일관된 방식
+    const getUserId = () => {
+        if (!user) {
+            console.error("사용자 정보가 없습니다");
+            return null;
+        }
+        
+        // 소셜 로그인인 경우 접두사 추가
+        const isSocialLogin = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
+        if (isSocialLogin && user.id) {
+            const provider = user.authProvider?.toLowerCase() || 'social';
+            return `${provider}_${user.id}`;
+        }
+        
+        // 일반 로그인
+        return user.id || user.userid || null;
+    };
+
     // 서버에서 게시물 가져오기
     const getMyPostList = async () => {
         try {
-            // 소셜 로그인 여부 확인
-            const isSocialLogin = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
-            
-            // 사용자 ID 준비 (소셜 로그인인 경우 접두사 추가)
-            let userId = user.id;
-            if (isSocialLogin) {
-                const provider = user.authProvider?.toLowerCase() || 'social';
-                userId = `${provider}_${user.id}`;
+            const userId = getUserId();
+            if (!userId) {
+                alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
+                navigate("/login");
+                return;
             }
             
+            const token = getAuthToken();
+            if (!token) {
+                alert("인증 정보가 없습니다. 다시 로그인해주세요.");
+                navigate("/login");
+                return;
+            }
+            
+            console.log("사용자 ID:", userId);
+            console.log("인증 토큰:", token);
+            
+            // API 엔드포인트 호출
             const response = await axios.get(`http://${config.IP_ADD}/travel/myPosts/${userId}`, {
                 headers: {
-                    "Content-Type": "multipart/form-data",
-                    Authorization: `Bearer ${user.token}`,
+                    Authorization: token,
+                    Accept: '*/*'
                 },
+                withCredentials: true
             });
     
-            const fetchedPosts = response.data.data;
+            console.log("응답 데이터:", response.data);
+            const fetchedPosts = response.data.data || [];
 
             // 좋아요 상태 가져오기
-            const likedStatusPromises = fetchedPosts.map((post) =>
-                axios.get(`http://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
-                headers: { Authorization: `Bearer ${user.token}` },
-                })
-            );
+            if (fetchedPosts.length > 0) {
+                const likedStatusPromises = fetchedPosts.map((post) =>
+                    axios.get(`http://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
+                        headers: { 
+                            Authorization: token,
+                            Accept: '*/*'
+                        },
+                        withCredentials: true
+                    }).catch(error => {
+                        console.log(`Post ${post.postId} like status error:`, error);
+                        return { data: false }; // 에러 발생 시 기본값 반환
+                    })
+                );
 
-            const likedStatusResponses = await Promise.all(likedStatusPromises);
-            const likedStatus = likedStatusResponses.reduce((acc, response, index) => {
-                acc[fetchedPosts[index].postId] = response.data;
-                return acc;
-            }, {});
+                const likedStatusResponses = await Promise.all(likedStatusPromises);
+                const likedStatus = likedStatusResponses.reduce((acc, response, index) => {
+                    acc[fetchedPosts[index].postId] = response.data?.liked || false;
+                    return acc;
+                }, {});
 
-            setLikedPosts(likedStatus); // 좋아요 상태 업데이트
+                setLikedPosts(likedStatus); // 좋아요 상태 업데이트
+            }
+
             setMyPostList(fetchedPosts); // 게시물 리스트 설정
 
         } catch (error) {
             console.error("Error fetching posts:", error);
+            
+            // HTML 응답 체크 추가
+            if (error.response && 
+                typeof error.response.data === 'string' && 
+                error.response.data.includes('<!DOCTYPE html>')) {
+                alert("인증이 필요합니다. 다시 로그인해주세요.");
+                navigate("/login");
+                return;
+            }
+            
+            // 응답 상태 체크
+            if (error.response) {
+                if (error.response.status === 403) {
+                    alert("접근 권한이 없습니다. 다시 로그인해주세요.");
+                    navigate("/login");
+                } else if (error.response.status === 401) {
+                    alert("인증이 필요합니다. 다시 로그인해주세요.");
+                    navigate("/login");
+                } else {
+                    alert("게시물을 불러오는 중 오류가 발생했습니다.");
+                }
+            } else {
+                alert("서버 연결에 실패했습니다.");
+            }
         }
     };
 
     // 컴포넌트 마운트 시 게시물 가져오기
     useEffect(() => {
-        getMyPostList();
-    }, []);
+        if (user) {
+            getMyPostList();
+        } else {
+            alert("로그인이 필요합니다.");
+            navigate("/login");
+        }
+    }, [user]);
 
 
     // 좋아요 버튼 클릭
     const likeButtonClick = async (postId) => {
         try {
+            const token = getAuthToken();
+            if (!token) {
+                alert("인증 정보가 없습니다. 다시 로그인해주세요.");
+                navigate("/login");
+                return;
+            }
+            
             const isLiked = likedPosts[postId];
             const url = `http://${config.IP_ADD}/travel/likes/${postId}`;
             const method = isLiked ? "delete" : "post";
@@ -80,7 +173,7 @@ const MyPost = () => {
                 method, 
                 url, 
                 headers: { 
-                    Authorization: `Bearer ${user.token}`,
+                    Authorization: token,
                     Accept: '*/*'
                 },
                 withCredentials: true
@@ -106,8 +199,8 @@ const MyPost = () => {
             // 오류 처리 개선
             if (error.response && error.response.status === 401) {
                 console.error("인증 오류");
-                // 로그아웃 처리 없이 알림만
-                alert("인증 정보가 만료되었습니다.");
+                alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
+                navigate("/login");
             } else {
                 alert("좋아요 처리 중 문제가 발생했습니다.");
             }
@@ -139,7 +232,6 @@ const MyPost = () => {
 
     // 글쓰기 페이지 이동
     const toWritePage = () => {
-
         navigate("/map");
     };
 
