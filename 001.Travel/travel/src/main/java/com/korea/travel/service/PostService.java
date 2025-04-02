@@ -73,7 +73,7 @@ public class PostService {
     
     // 마이 게시판 조회 - String ID 지원
     public List<PostDTO> getMyPostsByStringId(String userId) {
-        logger.info("마이 게시판 조회 - 문자열 ID: {}, 타입: {}", userId, userId.getClass().getName());
+        logger.info("마이 게시판 조회 시작 - 사용자 ID: {}, 타입: {}", userId, userId.getClass().getName());
         try {
             UserEntity user = findUserByStringId(userId);
             logger.info("사용자 조회 성공: ID={}, 닉네임={}", user.getId(), user.getUserNickName());
@@ -252,9 +252,14 @@ public class PostService {
             if (socialUser.isPresent()) {
                 // SocialEntity를 UserEntity로 변환 또는 임시 UserEntity 생성
                 UserEntity tempUser = new UserEntity();
-                tempUser.setId(1L); // 임시 ID (실제 환경에서는 더 나은 방법 필요)
+                
+                // 소셜 사용자의 ID를 기반으로 고유한 ID 부여
+                Long uniqueId = socialUser.get().getId();
+                tempUser.setId(uniqueId);  // 고유한 ID 설정 (수정된 부분)
+                
                 tempUser.setUserNickName(socialUser.get().getName());
-                logger.info("소셜 사용자 찾음: 이름={}, 변환된 임시 ID={}", socialUser.get().getName(), tempUser.getId());
+                logger.info("소셜 사용자 찾음: 이름={}, 고유 ID={}", 
+                          socialUser.get().getName(), uniqueId);
                 return tempUser;
             } else {
                 logger.warn("소셜 ID로 사용자를 찾을 수 없음: {}", socialId);
