@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -250,23 +251,39 @@ public class PostService {
             // 소셜 사용자 조회
             Optional<SocialEntity> socialUser = socialRepository.findBySocialId(socialId);
             if (socialUser.isPresent()) {
-                // SocialEntity를 UserEntity로 변환 또는 임시 UserEntity 생성
-                UserEntity tempUser = new UserEntity();
+                SocialEntity socialEntity = socialUser.get();
                 
-                // 소셜 사용자의 ID를 기반으로 고유한 ID 부여
-                Long uniqueId = socialUser.get().getId();
-                tempUser.setId(uniqueId);  // 고유한 ID 설정 (수정된 부분)
+                // 해당 소셜 ID를 가진 기존 UserEntity가 있는지 찾기
+                // 예: social_[provider]_[socialId] 형식의 userId로 조회
+                String socialUserId = "social_" + provider + "_" + socialId;
+                Optional<UserEntity> existingUser = userRepository.findByUserId(socialUserId);
                 
-                tempUser.setUserNickName(socialUser.get().getName());
-                logger.info("소셜 사용자 찾음: 이름={}, 고유 ID={}", 
-                          socialUser.get().getName(), uniqueId);
-                return tempUser;
+                if (existingUser.isPresent()) {
+                    logger.info("기존 UserEntity 찾음: ID={}, 닉네임={}", 
+                                existingUser.get().getId(), existingUser.get().getUserNickName());
+                    return existingUser.get();
+                } else {
+                    // 새 UserEntity 생성 및 저장
+                    UserEntity newUser = new UserEntity();
+                    newUser.setUserId(socialUserId);
+                    newUser.setUserName(socialEntity.getName());
+                    newUser.setUserNickName(socialEntity.getName());
+                    newUser.setUserCreatedAt(LocalDateTime.now().toString());
+                    
+                    // 비밀번호 필드가 필수라면 임의의 안전한 값 설정
+                    newUser.setUserPassword(UUID.randomUUID().toString());
+                    
+                    UserEntity savedUser = userRepository.save(newUser);
+                    logger.info("새 UserEntity 생성 및 저장: ID={}, 닉네임={}", 
+                                savedUser.getId(), savedUser.getUserNickName());
+                    return savedUser;
+                }
             } else {
                 logger.warn("소셜 ID로 사용자를 찾을 수 없음: {}", socialId);
             }
         } else {
             try {
-                // 일반 사용자 ID로 조회
+                // 일반 사용자 ID로 조회 (기존 코드와 동일)
                 Long userIdLong = Long.parseLong(userId);
                 logger.info("일반 사용자 ID로 조회: {}", userIdLong);
                 
