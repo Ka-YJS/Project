@@ -1,5 +1,7 @@
 package com.korea.travel.controller;
 
+import java.util.Optional;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -101,8 +103,9 @@ public class LikeController {
                 }
                 
                 // 일반 사용자 처리
-                UserEntity user = userRepository.findByUserId(userIdRaw);
-                if (user != null) {
+                Optional<UserEntity> userOptional = userRepository.findByUserId(userIdRaw);
+                if (userOptional.isPresent()) {
+                    UserEntity user = userOptional.get();
                     return new UserIdInfo(user.getId(), "REGULAR");
                 }
             }
