@@ -24,6 +24,8 @@ const Write = () => {
             // authProvider가 있으면 소셜 로그인으로 판단
             const socialLoginCheck = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
             setIsSocialLogin(socialLoginCheck);
+            console.log("사용자 정보:", user);
+            console.log("소셜 로그인 여부:", socialLoginCheck);
         }
     }, [user]);
 
@@ -47,7 +49,6 @@ const Write = () => {
 
     // 사용자 ID 가져오기
     const getUserId = () => {
-
         if (!user) {
             console.error("사용자 정보가 없습니다");
             return null;
@@ -55,19 +56,20 @@ const Write = () => {
         
         // 소셜 로그인인 경우 접두사 추가
         if (isSocialLogin && user.id) {
-            
             // 소셜 로그인 제공자에 따라 접두사 추가
             const provider = user.authProvider?.toLowerCase() || 'social';
-            return `${provider}_${user.id}`;
-
-            return user.id;
+            const socialId = `${provider}_${user.id}`;
+            console.log("소셜 로그인 ID 생성:", socialId);
+            return socialId;
         }
         
         // 일반 로그인
         if (user.id) {
+            console.log("일반 로그인 ID 사용:", user.id);
             return user.id;
         }
         if (user.userid) {
+            console.log("일반 로그인 userid 사용:", user.userid);
             return user.userid;
         }
         
@@ -78,19 +80,25 @@ const Write = () => {
     const getAuthToken = () => {
         // localStorage에서 먼저 확인
         const storedToken = localStorage.getItem('accessToken');
+        console.log("LocalStorage 토큰:", storedToken ? "토큰 있음" : "토큰 없음");
         
         if (storedToken) {
-            return storedToken.startsWith("Bearer ") ? storedToken : `Bearer ${storedToken}`;
+            const formattedToken = storedToken.startsWith("Bearer ") ? storedToken : `Bearer ${storedToken}`;
+            console.log("사용할 토큰 형식:", formattedToken.substring(0, 10) + "...");
+            return formattedToken;
         }
         
         if (user && user.accessToken) {
+            console.log("사용자 객체의 accessToken 사용");
             return user.accessToken.startsWith("Bearer ") ? user.accessToken : `Bearer ${user.accessToken}`;
         }
         
         if (user && user.token) {
+            console.log("사용자 객체의 token 사용");
             return user.token.startsWith("Bearer ") ? user.token : `Bearer ${user.token}`;
         }
         
+        console.log("토큰을 찾을 수 없음");
         return null;
     };
 
@@ -130,11 +138,11 @@ const Write = () => {
         }
         
         const token = getAuthToken();
-            if (!token) {
-                alert("인증 정보가 없습니다. 다시 로그인해주세요.");
-                navigate("/login");
-                return;
-            }
+        if (!token) {
+            alert("인증 정보가 없습니다. 다시 로그인해주세요.");
+            navigate("/login");
+            return;
+        }
     
         //허용된 파일 확장자 검사
         const allowedExtensions = ["png", "jpg", "jpeg", "gif"];
@@ -160,35 +168,31 @@ const Write = () => {
     
         try {
             // 폼 데이터 로깅 (디버깅용)
+            console.log("FormData 내용:");
             for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value instanceof File ? `파일: ${value.name}` : value}`);
             }
             
             // API 엔드포인트 확인
             const endpoint = `http://${config.IP_ADD}/travel/write/${userId}`;
+            console.log("요청 URL:", endpoint);
+            console.log("사용자 ID:", userId);
+            console.log("인증 토큰 유무:", token ? "토큰 있음" : "토큰 없음");
             
-            // 헤더 설정 - Content-Type 지정 안 함 (FormData는 자동으로 multipart/form-data로 설정됨)
-            const headers = {};
-            
-            // 토큰 처리 수정
-            const token = getAuthToken();
-            if (token) {
-                headers["Authorization"] = token;
-            } else {
-                console.error("토큰이 없습니다. 인증이 불가능합니다.");
-                alert("인증 정보가 없습니다. 다시 로그인해주세요.");
-                navigate("/login");
-                return;
-            }
+            // 헤더 설정 및 로깅
+            const headers = {
+                Authorization: token,
+                'Accept': 'application/json'
+            };
+            console.log("요청 헤더:", headers);
             
             // Axios 요청
             const response = await axios.post(endpoint, formData, {
-                headers: {
-                    Authorization: token,
-                    'Accept': 'application/json'
-                },
+                headers,
                 withCredentials: true
             });
         
+            console.log("서버 응답:", response.data);
             
             if (response.data && response.data.postId) {
                 // 직접 반환된 PostDTO
@@ -243,6 +247,17 @@ const Write = () => {
 
         } catch (error) {
             console.error("Error saving post:", error);
+            console.error("Error response:", error.response?.data);
+            console.error("Error status:", error.response?.status);
+            console.error("Error message:", error.message);
+            
+            // 요청과 응답 상세 정보 로깅
+            if (error.config) {
+                console.log("Request config:", error.config);
+            }
+            if (error.request) {
+                console.log("Request sent but no response received");
+            }
         
             // API 응답이 HTML 형식인지 확인
             if (error.response && error.response.data && 
@@ -255,8 +270,9 @@ const Write = () => {
                 return;
             }
                 
-                alert("저장 중 오류가 발생했습니다. " + (error.response?.data || error.message));
-            }}
+            alert("저장 중 오류가 발생했습니다. " + (error.response?.data || error.message));
+        }
+    };
 
     // 취소 버튼 핸들러
     const handleCancel = () => {
