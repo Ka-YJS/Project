@@ -74,7 +74,8 @@ const MyPost = () => {
                 return;
             }
             
-            console.log("사용자 ID:", userId);
+            console.log("요청 사용자 ID:", userId);
+            console.log("사용자 데이터:", user);
             console.log("인증 토큰:", token);
             
             // API 엔드포인트 호출
@@ -87,6 +88,7 @@ const MyPost = () => {
             });
     
             console.log("응답 데이터:", response.data);
+            console.log("응답 데이터 길이:", response.data.data?.length);
             const fetchedPosts = response.data.data || [];
 
             // 좋아요 상태 가져오기
