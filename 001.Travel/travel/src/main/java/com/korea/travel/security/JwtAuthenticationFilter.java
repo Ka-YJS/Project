@@ -139,7 +139,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     }
                 } else {
                     // 일반 사용자 검색
-                    UserEntity user = userRepository.findByUserId(userId);
+                	Optional<UserEntity> user = userRepository.findByUserId(userId);
                     if (user != null) {
                         // 일반 사용자의 권한 설정 (기본적으로 USER 권한 부여)
                         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_USER");
