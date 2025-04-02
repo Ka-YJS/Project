@@ -116,6 +116,8 @@ public class PostController {
             @RequestPart("userNickName") String userNickName,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
     	
+        logger.info("게시글 작성 요청 받음 - 사용자 ID: {}, 제목: {}", userId, postTitle);
+        
         try {
             // DTO 생성
             PostDTO postDTO = new PostDTO();
@@ -123,25 +125,39 @@ public class PostController {
             postDTO.setPostContent(postContent);
             if (placeList != null && !placeList.trim().isEmpty()) {
                 postDTO.setPlaceList(Arrays.asList(placeList.split(", ")));
+                logger.info("장소 목록: {}", placeList);
             }
             postDTO.setUserNickname(userNickName);
             postDTO.setPostCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
             
             // 파일 처리
             if (files != null && !files.isEmpty()) {
+                logger.info("파일 개수: {}", files.size());
                 List<String> imageUrls = postService.saveFiles(files);
                 postDTO.setImageUrls(imageUrls);
+            } else {
+                logger.info("첨부 파일 없음");
             }
             
             // 수정된 서비스 메서드 호출
+            logger.info("게시글 생성 서비스 호출 - 사용자 ID: {}", userId);
             PostDTO createdPost = postService.createPostWithStringUserId(userId, postDTO);
             
             List<PostDTO> dtos = List.of(createdPost);
             ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().data(dtos).build();
+            logger.info("게시글 생성 성공 - ID: {}", createdPost.getPostId());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("게시글 작성 중 오류: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("게시글 작성 중 오류: " + e.getMessage());
+            logger.error("게시글 작성 중 오류: {}", e.getMessage(), e);
+            
+            // 보다 상세한 오류 응답 반환
+            String errorMessage = "게시글 작성 중 오류: " + e.getMessage();
+            // 원인이 될 수 있는 특정 예외 확인
+            if (e.getCause() != null) {
+                errorMessage += " (원인: " + e.getCause().getMessage() + ")";
+            }
+            
+            return ResponseEntity.badRequest().body(errorMessage);
         }
     }
     
