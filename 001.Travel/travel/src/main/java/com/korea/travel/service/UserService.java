@@ -116,9 +116,11 @@ public class UserService {
     @Transactional
     public boolean userResetPassword(UserDTO dto) {
         // 아이디로 사용자 조회
-        UserEntity user = repository.findByUserId(dto.getUserId());
+        Optional<UserEntity> userOptional = repository.findByUserId(dto.getUserId());
         
-        if (user != null) {
+        if (userOptional.isPresent()) {
+            // Optional에서 실제 UserEntity 객체 가져오기
+            UserEntity user = userOptional.get();
             // 새 비밀번호 암호화하여 저장
             user.setUserPassword(passwordEncoder.encode(dto.getUserPassword()));
             repository.save(user);
@@ -132,10 +134,12 @@ public class UserService {
 	//로그인(로그인할때 토큰생성)
 	public UserDTO getByCredentials(UserDTO dto) {
 		
-		UserEntity user = repository.findByUserId(dto.getUserId());		
+		Optional<UserEntity> userOptional = repository.findByUserId(dto.getUserId());
 		
 		//user가 존재하면 /DB에 저장된 암호화된 비밀번호와 사용자에게 입력받아 전달된 암호화된 비밀번호를 비교
-		if(user != null && passwordEncoder.matches(dto.getUserPassword(),user.getUserPassword())) {
+		if(userOptional.isPresent() && passwordEncoder.matches(dto.getUserPassword(), userOptional.get().getUserPassword())) {
+			//실제 UserEntity 객체 가져오기
+			UserEntity user = userOptional.get();
 			//토큰생성(180분설정해둠)
 			final String token = tokenProvider.create(user);
 						
