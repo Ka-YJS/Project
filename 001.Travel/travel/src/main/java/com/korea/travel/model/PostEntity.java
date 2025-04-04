@@ -1,7 +1,5 @@
 package com.korea.travel.model;
-
 import java.util.List;
-
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -18,7 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 @Data
 @Builder
 @Table(name = "posts")
@@ -52,6 +49,13 @@ public class PostEntity {
     
     private String postCreatedAt;
     
+    // 소셜 로그인 관련 필드 추가
+    @Column(name = "auth_provider")
+    private String authProvider;       // 인증 제공자 (KAKAO, GOOGLE 등)
+    
+    @Column(name = "social_id")
+    private String socialId;           // 소셜 로그인 ID 값
+    
     // UserEntity와의 연관 관계 설정 (ManyToOne)
     @ManyToOne(fetch = FetchType.EAGER)  // 다대일 관계 user가 여러 게시글을 쓸수있게해준다.
     @JoinColumn(name = "user_id")       // 외래 키 컬럼명
@@ -60,7 +64,6 @@ public class PostEntity {
     // 좋아요를 눌렀던 유저들과의 관계 (OneToMany)
     @OneToMany(mappedBy = "postEntity")
     private List<LikeEntity> likeEntities; // 좋아요 엔티티 리스트
-
     // 좋아요 수 계산
     public int getLikeCount() {
         return likeEntities.size();  // LikeEntity 리스트의 크기 반환
