@@ -126,6 +126,22 @@ public class PostService {
             postDTO.setUserEntity(user);
             logger.info("게시글 DTO에 사용자 엔티티 설정 완료");
             
+            // 소셜 로그인 정보 추가
+            String authProvider = null;
+            String socialId = null;
+            
+            if (userId.startsWith("google_")) {
+                authProvider = "GOOGLE";
+                socialId = userId.substring("google_".length());
+            } else if (userId.startsWith("kakao_")) {
+                authProvider = "KAKAO";
+                socialId = userId.substring("kakao_".length());
+            }
+            
+            postDTO.setAuthProvider(authProvider);
+            postDTO.setSocialId(socialId);
+            logger.info("소셜 로그인 정보 설정: provider={}, socialId={}", authProvider, socialId);
+            
             // 기존 기능 호출
             return createPost(postDTO);
         } catch (Exception e) {
@@ -306,6 +322,27 @@ public class PostService {
     }
 
     private PostDTO convertToDTO(PostEntity entity) {
+        // UserEntity에서 정보 추출
+        UserEntity user = entity.getUserEntity();
+        
+        // 소셜 로그인 정보 추출
+        String authProvider = entity.getAuthProvider();
+        String socialId = entity.getSocialId();
+        
+        // authProvider와 socialId가 없는 경우, userId에서 추출 시도
+        if ((authProvider == null || socialId == null) && user != null && user.getUserId() != null) {
+            String userId = user.getUserId();
+            if (userId.startsWith("social_google_")) {
+                authProvider = "GOOGLE";
+                socialId = userId.substring("social_google_".length());
+            } else if (userId.startsWith("social_kakao_")) {
+                authProvider = "KAKAO";
+                socialId = userId.substring("social_kakao_".length());
+            }
+            
+            logger.debug("UserEntity에서 소셜 정보 추출: provider={}, socialId={}", authProvider, socialId);
+        }
+        
         PostDTO dto = PostDTO.builder()
                 .postId(entity.getPostId())
                 .userId(entity.getUserEntity().getId())
@@ -316,9 +353,12 @@ public class PostService {
                 .imageUrls(entity.getImageUrls())
                 .likes(likeRepository.countByPostEntity(entity))
                 .postCreatedAt(entity.getPostCreatedAt())
+                .authProvider(authProvider)  // 소셜 로그인 제공자
+                .socialId(socialId)          // 소셜 ID
                 .build();
         
-        logger.debug("엔티티->DTO 변환: ID={}, 제목={}", dto.getPostId(), dto.getPostTitle());
+        logger.debug("엔티티->DTO 변환: ID={}, 제목={}, provider={}, socialId={}", 
+                    dto.getPostId(), dto.getPostTitle(), dto.getAuthProvider(), dto.getSocialId());
         return dto;
     }
 
@@ -331,9 +371,12 @@ public class PostService {
                 .imageUrls(dto.getImageUrls())
                 .postCreatedAt(dto.getPostCreatedAt())
                 .userEntity(dto.getUserEntity())
+                .authProvider(dto.getAuthProvider())  // 소셜 로그인 제공자
+                .socialId(dto.getSocialId())          // 소셜 ID
                 .build();
         
-        logger.debug("DTO->엔티티 변환: 제목={}, 작성자={}", entity.getPostTitle(), entity.getUserNickname());
+        logger.debug("DTO->엔티티 변환: 제목={}, 작성자={}, provider={}, socialId={}", 
+                    entity.getPostTitle(), entity.getUserNickname(), entity.getAuthProvider(), entity.getSocialId());
         return entity;
     }
 }
