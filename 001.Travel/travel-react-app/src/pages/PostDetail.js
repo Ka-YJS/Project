@@ -66,6 +66,52 @@ const PostDetail = () => {
         // 일반 로그인
         return user.id || null;
     };
+    
+    // ID 비교를 위한 헬퍼 함수 추가
+    const isPostOwner = () => {
+        const currentUserId = getUserId();
+        const postUserId = post.userId || '';
+        
+        // 소셜 로그인 접두사 제거 후 비교를 위한 함수
+        const extractBaseId = (id) => {
+            const socialPrefixes = ['google_', 'kakao_', 'social_'];
+            for (const prefix of socialPrefixes) {
+                if (typeof id === 'string' && id.startsWith(prefix)) {
+                    return id.substring(prefix.length);
+                }
+            }
+            return id;
+        };
+        
+        // 디버깅용 로그
+        console.log("post.userId:", postUserId);
+        console.log("currentUserId:", currentUserId);
+        console.log("extractBaseId(currentUserId):", extractBaseId(currentUserId));
+        
+        // 1. 기본 ID 비교 
+        if (String(postUserId) === String(currentUserId)) {
+            return true;
+        }
+        
+        // 2. 소셜 로그인 ID에서 접두사 제거 후 비교
+        const baseCurrentUserId = extractBaseId(currentUserId);
+        if (String(postUserId) === String(baseCurrentUserId)) {
+            return true;
+        }
+        
+        // 3. 특수 케이스: 카카오 로그인의 경우 서버에서 사용자 ID를 순차적 숫자(예: 3)로 저장할 수 있음
+        // post.userId가 숫자이고 사용자가 카카오 로그인인 경우 내 글로 간주
+        if (user && user.authProvider === 'KAKAO' && !isNaN(Number(postUserId)) && Number(postUserId) > 0) {
+            const kakaoId = baseCurrentUserId;
+            console.log("카카오 로그인 특수 케이스 확인", postUserId, kakaoId);
+            if (post.userNickname === user.userNickName) {
+                console.log("닉네임 일치로 소유자 확인됨");
+                return true;
+            }
+        }
+        
+        return false;
+    };
 
     // 게시글 상세 데이터 가져오기
     const getPostDetail = async () => {
@@ -228,6 +274,13 @@ const PostDetail = () => {
             }
         }
     }, [id, user, navigate]); // navigate도 의존성 배열에 추가
+
+    // 게시글 소유자 확인용 디버깅 로그 추가
+    useEffect(() => {
+        if (post.userId) {
+            console.log("게시글 소유자 확인:", isPostOwner());
+        }
+    }, [post.userId]);
 
     if (!post) {
         return (
@@ -649,7 +702,8 @@ const PostDetail = () => {
                             >
                                 목록
                             </Button>
-                            {String(post.userId) === String(getUserId()) && (
+                            {/* 수정된 부분: isPostOwner() 함수를 사용하여 게시글 소유자 확인 */}
+                            {isPostOwner() && (
                                 <div>
                                     <Button
                                         variant="outlined"
