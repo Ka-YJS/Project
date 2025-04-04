@@ -189,47 +189,36 @@ public class PostService {
     
     //게시글 수정
     public PostDTO updatePost(Long id, String postTitle, String postContent, List<String> placeListParsed, 
-    		String userNickName, List<MultipartFile> files, List<String> existingImageUrls) {
+            String userNickName, List<MultipartFile> files, List<String> existingImageUrls) {
         logger.info("게시글 수정 시작: ID={}, 제목={}", id, postTitle);
-		
-    	PostEntity postEntity = postRepository.findById(id)
-		.orElseThrow(() -> {
+        
+        PostEntity postEntity = postRepository.findById(id)
+        .orElseThrow(() -> {
             logger.warn("수정할 게시글을 찾을 수 없음: ID={}", id);
             return new RuntimeException("게시글을 찾을 수 없습니다.");
         });
-		
-		postEntity.setPostTitle(postTitle);
-		postEntity.setPostContent(postContent);
-		postEntity.setUserNickname(userNickName);
-		
-		if(placeListParsed != null && !placeListParsed.isEmpty()) {
+        
+        // 기존 소셜 로그인 정보 저장
+        String originalAuthProvider = postEntity.getAuthProvider();
+        String originalSocialId = postEntity.getSocialId();
+        
+        postEntity.setPostTitle(postTitle);
+        postEntity.setPostContent(postContent);
+        postEntity.setUserNickname(userNickName);
+        
+        // 소셜 로그인 정보 유지
+        postEntity.setAuthProvider(originalAuthProvider);
+        postEntity.setSocialId(originalSocialId);
+        
+        if(placeListParsed != null && !placeListParsed.isEmpty()) {
             logger.info("장소 목록 업데이트: {}", placeListParsed);
-			postEntity.setPlaceList(new ArrayList<>(placeListParsed));
+            postEntity.setPlaceList(new ArrayList<>(placeListParsed));
         } else {
             logger.info("장소 목록 null로 설정");
-        	postEntity.setPlaceList(null);
+            postEntity.setPlaceList(null);
         }
-		
-		List<String> allImageUrls = new ArrayList<>();
-        if (existingImageUrls != null) {
-            logger.info("기존 이미지 URL 추가: {}개", existingImageUrls.size());
-            allImageUrls.addAll(existingImageUrls);
-        }
-		
-		if (files != null && !files.isEmpty()) {
-            logger.info("새 이미지 파일 저장 시작: {}개", files.size());
-			List<String> newImageUrls = saveFiles(files);
-			allImageUrls.addAll(newImageUrls);
-            logger.info("새 이미지 URL 추가: {}개", newImageUrls.size());
-		}
-		
-		postEntity.setImageUrls(allImageUrls);
-        logger.info("총 이미지 URL 설정: {}개", allImageUrls.size());
-		
-		PostEntity updatedEntity = postRepository.save(postEntity);
-        logger.info("게시글 수정 완료: ID={}", updatedEntity.getPostId());
-		return convertToDTO(updatedEntity);
-	}    
+        
+    } 
     
     // 게시글 삭제
     public boolean deletePost(Long id) {
