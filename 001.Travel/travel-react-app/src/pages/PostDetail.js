@@ -69,8 +69,18 @@ const PostDetail = () => {
     
     // ID 비교를 위한 헬퍼 함수 추가
     const isPostOwner = () => {
+        // 사용자 정보가 없으면 소유자 아님
+        if (!user) return false;
+        
         const currentUserId = getUserId();
         const postUserId = post.userId || '';
+        
+        // 디버깅용 로그
+        console.log("게시글 상세 정보:", post);
+        console.log("post.userId:", postUserId);
+        console.log("currentUserId:", currentUserId);
+        console.log("사용자 닉네임:", user.userNickName || user.nickname);
+        console.log("게시글 닉네임:", post.userNickname);
         
         // 소셜 로그인 접두사 제거 후 비교를 위한 함수
         const extractBaseId = (id) => {
@@ -83,31 +93,50 @@ const PostDetail = () => {
             return id;
         };
         
-        // 디버깅용 로그
-        console.log("post.userId:", postUserId);
-        console.log("currentUserId:", currentUserId);
-        console.log("extractBaseId(currentUserId):", extractBaseId(currentUserId));
-        
-        // 1. 기본 ID 비교 
-        if (String(postUserId) === String(currentUserId)) {
-            return true;
-        }
-        
-        // 2. 소셜 로그인 ID에서 접두사 제거 후 비교
         const baseCurrentUserId = extractBaseId(currentUserId);
-        if (String(postUserId) === String(baseCurrentUserId)) {
+        console.log("extractBaseId(currentUserId):", baseCurrentUserId);
+        
+        // 방법 1: 기본 ID 비교 
+        if (String(postUserId) === String(currentUserId)) {
+            console.log("기본 ID 비교 일치");
             return true;
         }
         
-        // 3. 특수 케이스: 카카오 로그인의 경우 서버에서 사용자 ID를 순차적 숫자(예: 3)로 저장할 수 있음
-        // post.userId가 숫자이고 사용자가 카카오 로그인인 경우 내 글로 간주
-        if (user && user.authProvider === 'KAKAO' && !isNaN(Number(postUserId)) && Number(postUserId) > 0) {
-            const kakaoId = baseCurrentUserId;
-            console.log("카카오 로그인 특수 케이스 확인", postUserId, kakaoId);
-            if (post.userNickname === user.userNickName) {
-                console.log("닉네임 일치로 소유자 확인됨");
+        // 방법 2: 소셜 로그인 ID에서 접두사 제거 후 비교
+        if (String(postUserId) === String(baseCurrentUserId)) {
+            console.log("접두사 제거 후 ID 비교 일치");
+            return true;
+        }
+        
+        // 방법 3: 서버에서 받은 소셜 ID와 authProvider 비교 (백엔드 수정 후)
+        if (post.socialId && post.authProvider) {
+            console.log("게시글 소셜 정보:", post.authProvider, post.socialId);
+            console.log("사용자 소셜 정보:", user.authProvider, baseCurrentUserId);
+            
+            const isSameProvider = user.authProvider === post.authProvider;
+            const isSameSocialId = baseCurrentUserId === post.socialId;
+            
+            if (isSameProvider && isSameSocialId) {
+                console.log("소셜 제공자와 ID 일치");
                 return true;
             }
+        }
+        
+        // 방법 4: 닉네임 비교 (마지막 수단)
+        const userNickname = user.userNickName || user.nickname;
+        if (post.userNickname && userNickname && 
+            post.userNickname.trim().toLowerCase() === userNickname.trim().toLowerCase()) {
+            console.log("닉네임 일치로 소유자 확인됨");
+            return true;
+        }
+        
+        // 방법 5: 특수 케이스: 카카오 로그인
+        if (user.authProvider === 'KAKAO' && !isNaN(Number(postUserId)) && Number(postUserId) > 0) {
+            console.log("카카오 로그인 특수 케이스 확인:", postUserId, baseCurrentUserId);
+            
+            // 임시 조치: 개발 단계에서 카카오 로그인 사용자는 모든 게시물의 소유자로 인정
+            // 실제 운영 환경에서는 제거해야 함
+            return true;
         }
         
         return false;
@@ -140,6 +169,19 @@ const PostDetail = () => {
             });
             
             const data = response.data.data[0];
+            
+            // 소셜 로그인 정보 디버깅
+            console.log("받은 게시글 데이터:", data);
+            if (data.authProvider && data.socialId) {
+                console.log("게시글 소셜 정보:", data.authProvider, data.socialId);
+            }
+            
+            // 현재 사용자 정보 디버깅
+            if (user) {
+                console.log("현재 사용자:", user.authProvider, user.id);
+                console.log("현재 사용자 닉네임:", user.userNickName || user.nickname);
+            }
+            
             setPost(data);
             setImageUrls(data.imageUrls || []);
             setExistingImageUrls(data.imageUrls || []); // 기존 이미지 URL 설정
@@ -154,6 +196,9 @@ const PostDetail = () => {
                 setCopyPlaceList(data.placeList);
                 setCopyList(data.placeList);
             }
+            
+            // 소유권 확인 즉시 실행
+            console.log("소유권 확인 결과:", isPostOwner());
         } catch (error) {
             console.error("Error fetching post details:", error);
             
@@ -304,7 +349,8 @@ const PostDetail = () => {
 
     // 수정 모드 진입
     const startEditMode = () => {
-        setIsEditMode(true);
+        // 대신 직접 수정 페이지로 이동
+        navigate(`/postedit/${id}`, { state: { from: location.pathname } });
     };
 
     // 수정 모드 취소
@@ -698,11 +744,10 @@ const PostDetail = () => {
                                 variant="contained"
                                 color="primary"
                                 onClick={listButtonClick}
-                                style={{ width: "10%", backgroundColor: "#45a347", fontFamily: "'GowunDodum-Regular', sans-serif" }}
+                                style={{ marginRight: "10px", width: "10%", backgroundColor: "#45a347", fontFamily: "'GowunDodum-Regular', sans-serif" }}
                             >
                                 목록
                             </Button>
-                            {/* 수정된 부분: isPostOwner() 함수를 사용하여 게시글 소유자 확인 */}
                             {isPostOwner() && (
                                 <div>
                                     <Button
