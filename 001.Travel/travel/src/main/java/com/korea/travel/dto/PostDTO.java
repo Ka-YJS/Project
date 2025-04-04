@@ -1,15 +1,10 @@
 package com.korea.travel.dto;
-
-
 import java.util.List;
-
 import com.korea.travel.model.UserEntity;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 @Data
 @Builder
 @AllArgsConstructor
@@ -26,7 +21,10 @@ public class PostDTO {
 	private String thumbnail;
 	private int likes;
 	private String postCreatedAt;	//게시글등록시간
-	private UserEntity userEntity;  
+	private UserEntity userEntity;
+	
+	// 소셜 로그인 정보 필드 추가
+	private String authProvider;    // 인증 제공자 (KAKAO, GOOGLE 등)
+	private String socialId;        // 소셜 로그인 ID 값
 	
 }
-
