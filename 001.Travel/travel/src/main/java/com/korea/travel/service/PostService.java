@@ -187,7 +187,7 @@ public class PostService {
         return fileUrls;
     }
     
-    //게시글 수정
+  //게시글 수정
     public PostDTO updatePost(Long id, String postTitle, String postContent, List<String> placeListParsed, 
             String userNickName, List<MultipartFile> files, List<String> existingImageUrls) {
         logger.info("게시글 수정 시작: ID={}, 제목={}", id, postTitle);
@@ -218,7 +218,33 @@ public class PostService {
             postEntity.setPlaceList(null);
         }
         
-    } 
+        // 파일 처리 및 이미지 URL 업데이트
+        List<String> updatedImageUrls = new ArrayList<>();
+        
+        // 기존 이미지 URL 유지 (만약 있다면)
+        if (existingImageUrls != null && !existingImageUrls.isEmpty()) {
+            logger.info("기존 이미지 URL 유지: {}", existingImageUrls);
+            updatedImageUrls.addAll(existingImageUrls);
+        }
+        
+        // 새 파일 업로드 및 URL 추가
+        if (files != null && !files.isEmpty()) {
+            logger.info("새 파일 업로드 처리: {}개 파일", files.size());
+            List<String> newFileUrls = saveFiles(files);
+            updatedImageUrls.addAll(newFileUrls);
+        }
+        
+        // 게시글에 업데이트된 이미지 URL 설정
+        postEntity.setImageUrls(updatedImageUrls);
+        logger.info("게시글 이미지 URL 업데이트 완료: {}개 이미지", updatedImageUrls.size());
+        
+        // 변경사항 저장
+        PostEntity updatedEntity = postRepository.save(postEntity);
+        logger.info("게시글 업데이트 완료: ID={}", updatedEntity.getPostId());
+        
+        // DTO로 변환하여 반환
+        return convertToDTO(updatedEntity);
+    }
     
     // 게시글 삭제
     public boolean deletePost(Long id) {
