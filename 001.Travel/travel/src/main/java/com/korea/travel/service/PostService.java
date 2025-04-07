@@ -196,7 +196,11 @@ public class PostService {
         .orElseThrow(() -> {
             logger.warn("수정할 게시글을 찾을 수 없음: ID={}", id);
             return new RuntimeException("게시글을 찾을 수 없습니다.");
+            
         });
+        
+        // 추가: 현재 저장된 닉네임 값 로깅
+        logger.info("기존 저장된 userNickname 값: '{}'", postEntity.getUserNickname());
         
         // 기존 소셜 로그인 정보 저장
         String originalAuthProvider = postEntity.getAuthProvider();
