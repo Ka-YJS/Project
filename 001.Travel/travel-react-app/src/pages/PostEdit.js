@@ -8,6 +8,11 @@ import { CopyListContext } from "../context/CopyListContext";
 import { CopyPlaceListContext } from "../context/CopyPlaceListContext";
 import config from "../Apikey";
 
+// 닉네임 정규화 함수
+const getNormalizedNickname = (user, fallback = "알 수 없음") => {
+    if (!user) return fallback;
+    return user.nickName || user.userNickName || user.nickname || fallback;
+};
 
 const PostEdit = () => {
     const { user } = useContext(UserContext);
@@ -19,6 +24,7 @@ const PostEdit = () => {
     const [previewUrls, setPreviewUrls] = useState([]); 
     const [existingImageUrls, setExistingImageUrls] = useState([]);
     const [previousPath, setPreviousPath] = React.useState(null);
+    const [originalNickname, setOriginalNickname] = useState("");
 
     const location = useLocation();  // 현재 위치 추적
     const navigate = useNavigate();
@@ -42,6 +48,10 @@ const PostEdit = () => {
             return null;
         }
     };
+
+    useEffect(() => {
+        console.log("User 객체 전체 구조:", JSON.stringify(user, null, 2));
+    }, [user]);
 
     // 게시글 데이터 불러오기
     useEffect(() => {
@@ -73,12 +83,13 @@ const PostEdit = () => {
                 // 권한 확인
                 const userId = postData.userId;
                 const postNickname = postData.userNickname;
+                setOriginalNickname(postNickname); // 원본 닉네임 저장
                 const currentUserId = getUserId();
                 
                 console.log("게시글 작성자 ID:", userId);
                 console.log("현재 사용자 ID:", currentUserId);
                 console.log("게시글 닉네임:", postNickname);
-                console.log("현재 사용자 닉네임:", user.userNickName);
+                console.log("현재 사용자 닉네임:", getNormalizedNickname(user));
 
                 // 카카오 로그인의 경우 닉네임으로 확인
                 const isOwner = isPostOwner(postData);
@@ -169,8 +180,8 @@ const PostEdit = () => {
             }
         }
         
-        // 방법 4: 닉네임 비교 (마지막 수단)
-        const userNickname = user.userNickName || user.nickname;
+        // 방법 4: 닉네임 비교
+        const userNickname = getNormalizedNickname(user);
         if (post.userNickname && userNickname && 
             post.userNickname.trim().toLowerCase() === userNickname.trim().toLowerCase()) {
             console.log("닉네임 일치로 소유자 확인됨");
@@ -243,12 +254,19 @@ const PostEdit = () => {
             return;
         }
 
+        console.log("저장 시 사용자 닉네임 확인:", getNormalizedNickname(user));
+        console.log("원본 게시글 닉네임:", originalNickname);
+
         // FormData 생성 및 전송
         const formData = new FormData();
         
         formData.append("postTitle", postTitle);
         formData.append("postContent", postContent);
-        formData.append("userNickName", user.userNickName);
+        
+        // 원본 닉네임 유지하거나 사용자 닉네임 사용
+        const nicknameToUse = originalNickname || getNormalizedNickname(user);
+        formData.append("userNickName", nicknameToUse);
+        
         formData.append("placeList", copyList?.join(", "));        
         formData.append("existingImageUrls", JSON.stringify(existingImageUrls));
 
@@ -272,7 +290,7 @@ const PostEdit = () => {
             console.log("수정 요청 보내기 전 데이터:", {
                 postTitle,
                 postContent,
-                userNickName: user.userNickName,
+                userNickName: nicknameToUse,
                 placeList: copyList?.join(", "),
                 existingImageUrls
             });
@@ -290,6 +308,7 @@ const PostEdit = () => {
             });
 
             console.log("응답 데이터:", response.data);
+            console.log("응답 데이터 상세:", JSON.stringify(response.data, null, 2));
             alert("글이 수정되었습니다!");
 
             console.log("Redirecting to post ID:", id);
@@ -337,7 +356,7 @@ const PostEdit = () => {
                     label="작성자"
                     fullWidth
                     variant="outlined"
-                    value={user.userNickName || "알 수 없는 사용자"}
+                    value={getNormalizedNickname(user)}
                 />
             </div>
 
