@@ -12,13 +12,13 @@ import config from "../Apikey";
 const getNormalizedNickname = (user, fallback = "알 수 없음") => {
     if (!user) return fallback;
     const nickname = user.nickName || user.userNickName || user.nickname || fallback;
-    return nickname.trim(); // 앞뒤 공백 제거
+    return typeof nickname === 'string' ? nickname.trim() : nickname; // 문자열 체크 후 앞뒤 공백 제거
 };
 
 const PostEdit = () => {
     const { user } = useContext(UserContext);
     const { copyList, setCopyList } = useContext(CopyListContext);
-    const {copyPlaceList, setCopyPlaceList} = useContext(CopyPlaceListContext);
+    const { copyPlaceList, setCopyPlaceList } = useContext(CopyPlaceListContext);
     const [postTitle, setPostTitle] = useState("");
     const [postContent, setPostContent] = useState("");
     const [selectedFiles, setSelectedFiles] = useState([]); 
@@ -258,11 +258,11 @@ const PostEdit = () => {
         let userNickname = "";
         
         if (originalPost && originalPost.userNickname) {
-            // 원본 닉네임이 있으면 그대로 사용
+            // 원본 닉네임이 있으면 그대로 사용 (항상 게시글의 원 저자 정보 유지)
             userNickname = originalPost.userNickname;
             console.log("원본 닉네임 사용:", userNickname);
         } else {
-            // 원본 닉네임이 없으면 현재 사용자 닉네임 사용
+            // 원본 닉네임이 없으면 현재 사용자 닉네임 사용 (새 게시글 작성 시나리오)
             userNickname = getNormalizedNickname(user);
             console.log("현재 사용자 닉네임 사용:", userNickname);
         }
@@ -390,7 +390,7 @@ const PostEdit = () => {
                     label="작성자"
                     fullWidth
                     variant="outlined"
-                    value={getNormalizedNickname(user)}
+                    value={originalPost?.userNickname || getNormalizedNickname(user)}
                 />
             </div>
 
