@@ -17,6 +17,7 @@ const PostDetail = () => {
     const [imageUrls, setImageUrls] = useState([]);
     const [isLiked, setIsLiked] = useState(false); // 좋아요 상태
     const [likeCount, setLikeCount] = useState(0); // 좋아요 개수
+    const [isLikeLoading, setIsLikeLoading] = useState(false); // 좋아요 로딩 상태
 
     // 수정 모드를 위한 상태 추가
     const [isEditMode, setIsEditMode] = useState(false);
@@ -245,13 +246,17 @@ const PostDetail = () => {
         }
     };
 
-    // 좋아요 버튼 클릭
+    // 좋아요 버튼 클릭 - 개선된 버전
     const likeButtonClick = async () => {
+        // 이미 요청 중이면 무시
+        if (isLikeLoading) return;
+        
         try {
+            setIsLikeLoading(true); // 요청 시작 표시
+            
             const token = getAuthToken();
             if (!token) {
                 alert("인증 정보가 없습니다. 다시 로그인해주세요.");
-                // navigate("/login");
                 return;
             }
             
@@ -267,13 +272,13 @@ const PostDetail = () => {
                     Accept: '*/*' 
                 },
                 withCredentials: true,
-                // 타임아웃 설정 추가
                 timeout: 10000
             });
             
-            // UI 상태 업데이트
-            setIsLiked(!isLiked);
+            // UI 상태 업데이트 - API 응답 이후에 변경
+            setIsLiked(prev => !prev);
             setLikeCount(prevCount => isLiked ? prevCount - 1 : prevCount + 1);
+            
         } catch (error) {
             console.error("좋아요 처리 중 오류:", error);
             
@@ -286,11 +291,15 @@ const PostDetail = () => {
             // 인증 오류 처리
             if (error.response?.status === 401) {
                 alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
-                // navigate("/login", { replace: true });
                 return;
             }
             
             alert("좋아요 처리 중 문제가 발생했습니다.");
+        } finally {
+            // 요청 완료 후 타이머를 통해 상태 리셋 (중복 클릭 방지)
+            setTimeout(() => {
+                setIsLikeLoading(false);
+            }, 500); // 500ms 딜레이
         }
     };
 
@@ -425,9 +434,15 @@ const PostDetail = () => {
         formData.append("postContent", editedContent);
         formData.append("userNickName", post.userNickname || user.userNickName);
         
+        // 소셜 ID와 제공자 정보 명시적 추가 (백엔드 식별용)
+        if (user.authProvider) {
+            formData.append("authProvider", user.authProvider);
+            formData.append("socialId", user.id);
+        }
+        
         // copyList가 있다면 사용, 없으면 기존 placeList 사용
         const placeListToUse = copyList && copyList.length > 0 ? copyList : post.placeList;
-        formData.append("placeList", placeListToUse?.join(", "));
+        formData.append("placeList", placeListToUse?.join(", ") || "");
         
         formData.append("existingImageUrls", JSON.stringify(existingImageUrls));
 
@@ -458,11 +473,22 @@ const PostDetail = () => {
             
         } catch (error) {
             console.error("Error updating post:", error.response?.data || error.message);
-            alert(
-                `수정 중 오류가 발생했습니다: ${
-                error.response?.data?.message || "서버와의 통신에 실패했습니다."
-                }`
-            );
+            
+            // 오류 메시지 자세히 표시
+            let errorMessage = "서버와의 통신에 실패했습니다.";
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            // 중복 결과 오류 특별 처리
+            if (error.message && error.message.includes("Query did not return a unique result")) {
+                errorMessage = "사용자 정보가 중복되어 있습니다. 관리자에게 문의하세요.";
+            }
+            
+            alert(`수정 중 오류가 발생했습니다: ${errorMessage}`);
         }
     };
 
