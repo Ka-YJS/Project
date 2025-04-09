@@ -8,10 +8,11 @@ import { CopyListContext } from "../context/CopyListContext";
 import { CopyPlaceListContext } from "../context/CopyPlaceListContext";
 import config from "../Apikey";
 
-// 닉네임 정규화 함수
+// 닉네임 정규화 함수 - 대소문자 일관성 및 트림 처리 추가
 const getNormalizedNickname = (user, fallback = "알 수 없음") => {
     if (!user) return fallback;
-    return user.nickName || user.userNickName || user.nickname || fallback;
+    const nickname = user.nickName || user.userNickName || user.nickname || fallback;
+    return nickname.trim(); // 앞뒤 공백 제거
 };
 
 const PostEdit = () => {
@@ -24,7 +25,7 @@ const PostEdit = () => {
     const [previewUrls, setPreviewUrls] = useState([]); 
     const [existingImageUrls, setExistingImageUrls] = useState([]);
     const [previousPath, setPreviousPath] = React.useState(null);
-    const [originalNickname, setOriginalNickname] = useState("");
+    const [originalPost, setOriginalPost] = useState(null); // 원본 게시글 전체 정보 저장
 
     const location = useLocation();  // 현재 위치 추적
     const navigate = useNavigate();
@@ -78,20 +79,19 @@ const PostEdit = () => {
                 });
                 
                 const postData = response.data.data[0];
+                setOriginalPost(postData); // 원본 게시글 정보 전체 저장
                 console.log("받은 게시글 데이터:", postData);
 
                 // 권한 확인
                 const userId = postData.userId;
-                const postNickname = postData.userNickname;
-                setOriginalNickname(postNickname); // 원본 닉네임 저장
                 const currentUserId = getUserId();
                 
                 console.log("게시글 작성자 ID:", userId);
                 console.log("현재 사용자 ID:", currentUserId);
-                console.log("게시글 닉네임:", postNickname);
+                console.log("게시글 닉네임:", postData.userNickname);
                 console.log("현재 사용자 닉네임:", getNormalizedNickname(user));
 
-                // 카카오 로그인의 경우 닉네임으로 확인
+                // 게시글 소유권 확인
                 const isOwner = isPostOwner(postData);
                 if (!isOwner) {
                     alert("게시글 수정 권한이 없습니다.");
@@ -104,9 +104,9 @@ const PostEdit = () => {
                 setExistingImageUrls(postData.imageUrls || []);
                 
                 // 여행지 리스트 설정
-                setCopyPlaceList(postData.placeList);
-                setCopyList(postData.placeList);
-                console.log(postData.placeList);
+                setCopyPlaceList(postData.placeList || []);
+                setCopyList(postData.placeList || []);
+                console.log("여행지 리스트:", postData.placeList);
                     
             } catch (error) {
                 console.error("게시글 정보 불러오기 실패:", error);
@@ -169,7 +169,7 @@ const PostEdit = () => {
             return true;
         }
         
-        // 방법 3: 서버에서 받은 소셜 ID와 authProvider 비교 (백엔드 수정 후)
+        // 방법 3: 서버에서 받은 소셜 ID와 authProvider 비교
         if (post.socialId && post.authProvider) {
             const isSameProvider = user.authProvider === post.authProvider;
             const isSameSocialId = baseCurrentUserId === post.socialId;
@@ -180,10 +180,10 @@ const PostEdit = () => {
             }
         }
         
-        // 방법 4: 닉네임 비교
+        // 방법 4: 닉네임 비교 - 이 방법은 신중하게 사용
         const userNickname = getNormalizedNickname(user);
         if (post.userNickname && userNickname && 
-            post.userNickname.trim().toLowerCase() === userNickname.trim().toLowerCase()) {
+            post.userNickname.trim().toLowerCase() === userNickname.toLowerCase()) {
             console.log("닉네임 일치로 소유자 확인됨");
             return true;
         }
@@ -254,20 +254,39 @@ const PostEdit = () => {
             return;
         }
 
-        console.log("저장 시 사용자 닉네임 확인:", getNormalizedNickname(user));
-        console.log("원본 게시글 닉네임:", originalNickname);
+        // 닉네임 처리 - 원본 게시글 작성자 정보 우선 사용
+        let userNickname = "";
+        
+        if (originalPost && originalPost.userNickname) {
+            // 원본 닉네임이 있으면 그대로 사용
+            userNickname = originalPost.userNickname;
+            console.log("원본 닉네임 사용:", userNickname);
+        } else {
+            // 원본 닉네임이 없으면 현재 사용자 닉네임 사용
+            userNickname = getNormalizedNickname(user);
+            console.log("현재 사용자 닉네임 사용:", userNickname);
+        }
 
         // FormData 생성 및 전송
         const formData = new FormData();
         
         formData.append("postTitle", postTitle);
         formData.append("postContent", postContent);
+        formData.append("userNickName", userNickname);
         
-        // 원본 닉네임 유지하거나 사용자 닉네임 사용
-        const nicknameToUse = originalNickname || getNormalizedNickname(user);
-        formData.append("userNickName", nicknameToUse);
+        // 소셜 ID와 제공자 정보 명시적 추가 (백엔드 식별용)
+        if (user.authProvider) {
+            formData.append("authProvider", user.authProvider);
+            formData.append("socialId", user.id);
+        }
         
-        formData.append("placeList", copyList?.join(", "));        
+        // 여행지 리스트 추가
+        if (copyList && copyList.length > 0) {
+            formData.append("placeList", copyList.join(", "));
+        } else {
+            formData.append("placeList", "");
+        }
+        
         formData.append("existingImageUrls", JSON.stringify(existingImageUrls));
 
         // 새 파일 추가
@@ -277,6 +296,8 @@ const PostEdit = () => {
         for (let [key, value] of formData.entries()) {
             console.log(`${key}:`, value);
         }
+        
+        console.log("FormData 전송 직전 닉네임:", formData.get("userNickName"));
 
         try {
             // 일관된 토큰 사용
@@ -290,8 +311,10 @@ const PostEdit = () => {
             console.log("수정 요청 보내기 전 데이터:", {
                 postTitle,
                 postContent,
-                userNickName: nicknameToUse,
-                placeList: copyList?.join(", "),
+                userNickName: userNickname,
+                authProvider: user.authProvider,
+                socialId: user.id,
+                placeList: copyList?.join(", ") || "",
                 existingImageUrls
             });
             
@@ -315,17 +338,28 @@ const PostEdit = () => {
             navigate(`/postdetail/${id}`, { state: { from: location.state?.from } });  // 이전 경로로 이동
             
         } catch (error) {
-            console.error("Error updating post:", error);
+            console.error("게시글 수정 중 오류:", error);
+            console.error("오류 상세:", error.toString());
             console.error("응답 상태:", error.response?.status);
             console.error("응답 데이터:", error.response?.data);
             
-            alert(
-                `수정 중 오류가 발생했습니다: ${
-                error.response?.data?.message || "서버와의 통신에 실패했습니다."
-                }`
-            );
-        };
-    }
+            // 오류 메시지 자세히 표시
+            let errorMessage = "서버와의 통신에 실패했습니다.";
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            // 중복 결과 오류 특별 처리
+            if (error.message && error.message.includes("Query did not return a unique result")) {
+                errorMessage = "사용자 정보가 중복되어 있습니다. 관리자에게 문의하세요.";
+            }
+            
+            alert(`수정 중 오류가 발생했습니다: ${errorMessage}`);
+        }
+    };
 
     // 취소 버튼 핸들러
     const handleCancel = () => {
