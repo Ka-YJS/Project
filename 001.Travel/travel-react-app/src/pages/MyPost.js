@@ -20,7 +20,7 @@ const MyPost = () => {
     const [currentPage, setCurrentPage] = useState(1); // 현재 페이지
     const postsPerPage = 10; // 페이지당 게시물 수
 
-    // 인증 토큰 일관되게 가져오기 (Post.js에서 가져온 방식)
+    // 인증 토큰 일관되게 가져오기
     const getAuthToken = () => {
         try {
             // 토큰 소스 확인
@@ -31,30 +31,37 @@ const MyPost = () => {
                 return null;
             }
             
-            // Bearer 접두사 처리
-            return token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+            // Bearer 접두사 중복 방지 처리
+            if (token.startsWith("Bearer ")) {
+                return token;
+            } else {
+                return `Bearer ${token}`;
+            }
         } catch (error) {
             console.error("토큰 처리 중 오류:", error);
             return null;
         }
     };
 
-    // 사용자 ID 가져오기 - 일관된 방식
+    // 사용자 ID 가져오기
     const getUserId = () => {
         if (!user) {
             console.error("사용자 정보가 없습니다");
             return null;
         }
         
-        // 소셜 로그인인 경우 접두사 추가
+        // 단순하게 ID만 반환 (API 스펙에 맞게 수정 필요)
+        return user.id || user.userid || null;
+        
+        // 만약 서버에서 소셜 로그인을 접두사 형식으로 기대한다면 아래 코드 사용
+        /*
         const isSocialLogin = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
         if (isSocialLogin && user.id) {
             const provider = user.authProvider?.toLowerCase() || 'social';
             return `${provider}_${user.id}`;
         }
-        
-        // 일반 로그인
         return user.id || user.userid || null;
+        */
     };
 
     // 서버에서 게시물 가져오기
@@ -62,6 +69,7 @@ const MyPost = () => {
         try {
             const userId = getUserId();
             if (!userId) {
+                console.error("사용자 ID를 찾을 수 없습니다.");
                 alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
                 navigate("/login");
                 return;
@@ -69,6 +77,7 @@ const MyPost = () => {
             
             const token = getAuthToken();
             if (!token) {
+                console.error("인증 토큰을 찾을 수 없습니다.");
                 alert("인증 정보가 없습니다. 다시 로그인해주세요.");
                 navigate("/login");
                 return;
@@ -84,12 +93,24 @@ const MyPost = () => {
                     Authorization: token,
                     Accept: '*/*'
                 },
-                withCredentials: true
+                withCredentials: true // 필요한 경우에만 활성화 (문제 발생시 false로 변경)
             });
     
             console.log("응답 데이터:", response.data);
-            console.log("응답 데이터 길이:", response.data.data?.length);
-            const fetchedPosts = response.data.data || [];
+            
+            // 데이터 구조 확인 로직 추가
+            let fetchedPosts = [];
+            if (response.data && response.data.data) {
+                fetchedPosts = response.data.data;
+            } else if (Array.isArray(response.data)) {
+                fetchedPosts = response.data;
+            } else {
+                console.error("예상치 못한 응답 구조:", response.data);
+                fetchedPosts = [];
+            }
+
+            console.log("처리된 게시물 데이터:", fetchedPosts);
+            console.log("게시물 수:", fetchedPosts.length);
 
             // 좋아요 상태 가져오기
             if (fetchedPosts.length > 0) {
@@ -102,7 +123,7 @@ const MyPost = () => {
                         withCredentials: true
                     }).catch(error => {
                         console.log(`Post ${post.postId} like status error:`, error);
-                        return { data: false }; // 에러 발생 시 기본값 반환
+                        return { data: { liked: false } }; // 에러 발생 시 기본값 반환
                     })
                 );
 
@@ -119,12 +140,24 @@ const MyPost = () => {
 
         } catch (error) {
             console.error("Error fetching posts:", error);
+            console.error("Error details:", error.response || "No response");
             
-            // HTML 응답 체크 추가
-            if (error.response && 
+            // 오류 응답 상세 로깅
+            if (error.response) {
+                console.error("Status:", error.response.status);
+                console.error("Headers:", error.response.headers);
+                console.error("Data:", error.response.data);
+            }
+            
+            // HTML 응답 체크 - 덜 제한적인 방식으로 수정
+            const isHtmlResponse = error.response && 
                 typeof error.response.data === 'string' && 
-                error.response.data.includes('<!DOCTYPE html>')) {
-                alert("인증이 필요합니다. 다시 로그인해주세요.");
+                (error.response.data.includes('<!DOCTYPE html>') || 
+                 error.response.data.includes('<html>'));
+                
+            if (isHtmlResponse) {
+                console.log("HTML 응답 감지됨 - 로그인 필요");
+                alert("세션이 만료되었습니다. 다시 로그인해주세요.");
                 navigate("/login");
                 return;
             }
@@ -149,12 +182,14 @@ const MyPost = () => {
     // 컴포넌트 마운트 시 게시물 가져오기
     useEffect(() => {
         if (user) {
+            console.log("사용자 정보 존재함, 게시물 가져오기 시도");
             getMyPostList();
         } else {
+            console.log("사용자 정보 없음, 로그인 페이지로 이동");
             alert("로그인이 필요합니다.");
             navigate("/login");
         }
-    }, [user]);
+    }, [user, navigate]); // navigate 의존성 추가
 
 
     // 좋아요 버튼 클릭
@@ -239,7 +274,7 @@ const MyPost = () => {
 
     // 게시글 상세 페이지 이동
     const handlePostClick = (id) => {
-        navigate(`/postdetail/${id}`, { state: { from: `/mypost/${user.id}` } });
+        navigate(`/postdetail/${id}`, { state: { from: `/mypost/${user?.id || ''}` } });
     };
 
     return (
