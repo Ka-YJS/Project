@@ -22,7 +22,7 @@ const Post = () => {
     const postsPerPage = 10; // 페이지당 게시물 수
     const { list, setList } = useContext(ListContext);
 
-    // 인증 토큰 일관되게 가져오기
+    // 인증 토큰 일관되게 가져오기 - 수정된 버전
     const getAuthToken = () => {
         try {
             // 토큰 소스 확인
@@ -33,31 +33,51 @@ const Post = () => {
                 return null;
             }
             
-            // Bearer 접두사 처리
-            return token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+            // Bearer 접두사 중복 방지 처리
+            if (token.startsWith("Bearer ")) {
+                return token;
+            } else {
+                return `Bearer ${token}`;
+            }
         } catch (error) {
             console.error("토큰 처리 중 오류:", error);
             return null;
         }
     };
 
-    // 사용자 ID 가져오기 - 일관된 방식
+    // 사용자 ID 가져오기 - 단순화된 버전
     const getUserId = () => {
         if (!user) return null;
         return user.id || null;
     };
 
-    // 서버에서 게시물 가져오기
+    // 서버에서 게시물 가져오기 - 오류 처리 강화
     const getPostList = async () => {
         try {
+            console.log("게시물 목록 가져오기 시도");
+            
             // 게시물 가져오기 요청 - 인증 없이도 동작하도록 수정
             const response = await axios.get(`http://${config.IP_ADD}/travel/posts`);
-            const fetchedPosts = response.data.data;
+            console.log("게시물 응답 데이터:", response.data);
+            
+            // 데이터 구조 확인 및 안전 처리
+            let fetchedPosts = [];
+            if (response.data && response.data.data) {
+                fetchedPosts = response.data.data;
+            } else if (Array.isArray(response.data)) {
+                fetchedPosts = response.data;
+            } else {
+                console.error("예상치 못한 응답 구조:", response.data);
+            }
+            
+            console.log("처리된 게시물 데이터:", fetchedPosts);
+            console.log("게시물 수:", fetchedPosts.length);
             
             // 좋아요 상태 가져오기 - 인증이 있을 때만 시도
             const token = getAuthToken();
             if (token) {
                 try {
+                    console.log("좋아요 상태 가져오기 시도");
                     const likedStatusPromises = fetchedPosts.map((post) =>
                         axios.get(`http://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
                             headers: { 
@@ -78,17 +98,41 @@ const Post = () => {
                         return acc;
                     }, {});
     
+                    console.log("좋아요 상태:", likedStatus);
                     setLikedPosts(likedStatus); // 좋아요 상태 업데이트
                 } catch (error) {
                     console.error("Error fetching like status:", error);
                     // 오류가 있어도 게시물 목록은 표시
                 }
+            } else {
+                console.log("인증 토큰이 없어 좋아요 상태를 가져오지 않습니다.");
             }
             
             setPostList(fetchedPosts); // 게시물 리스트 설정
         } catch (error) {
             console.error("Error fetching posts:", error);
-            // 오류 처리는 기존과 동일하게 유지
+            console.error("Error details:", error.response || "No response");
+            
+            // 오류 응답 상세 로깅
+            if (error.response) {
+                console.error("Status:", error.response.status);
+                console.error("Headers:", error.response.headers);
+                console.error("Data:", error.response.data);
+            }
+            
+            // HTML 응답 체크 - 더 완화된 조건
+            const isHtmlResponse = error.response && 
+                typeof error.response.data === 'string' && 
+                (error.response.data.includes('<!DOCTYPE html>') || 
+                 error.response.data.includes('<html>'));
+                
+            if (isHtmlResponse) {
+                console.log("HTML 응답 감지됨 - 인증 문제 가능성");
+                // 이 페이지는 인증 없이도 볼 수 있으므로 경고만 표시
+                alert("서버 응답에 문제가 있습니다. 관리자에게 문의하세요.");
+            } else {
+                alert("게시물을 불러오는 중 오류가 발생했습니다.");
+            }
         }
     };
 
@@ -99,14 +143,10 @@ const Post = () => {
             console.log("Post.js - list 초기화");
             setList([]);
         }
+        
+        // 페이지 로드 시 게시물 목록 가져오기 (로그인 여부와 무관하게)
+        getPostList();
     }, []); // 마운트 시 한 번만 실행
-
-    // 컴포넌트 마운트 시 게시물 가져오기
-    useEffect(() => {
-        if (user) {
-            getPostList();
-        }
-    }, [user]);
 
     // 검색 및 필터링
     const filteredPosts = Array.isArray(postList)
@@ -132,33 +172,47 @@ const Post = () => {
 
     // 글쓰기 페이지 이동
     const toWritePage = () => {
+        if (!user) {
+            alert("기록하기는 로그인 후 이용 가능합니다.");
+            navigate("/login");
+            return;
+        }
         navigate("/map");
     };
 
-    // 좋아요 버튼 클릭
+    // 좋아요 버튼 클릭 - 오류 처리 개선
     const likeButtonClick = async (postId) => {
         try {
             const token = getAuthToken();
-                if (!token) {
-                    alert("좋아요를 남기려면 로그인이 필요합니다.");
-                    navigate("/login");
-                    return;
-                }
+            if (!token) {
+                alert("좋아요를 남기려면 로그인이 필요합니다.");
+                navigate("/login");
+                return;
+            }
 
-                const isLiked = likedPosts[postId];
-                const url = `http://${config.IP_ADD}/travel/likes/${postId}`;
-                const method = isLiked ? "delete" : "post";
+            console.log("좋아요 처리 - 포스트 ID:", postId);
+            console.log("현재 좋아요 상태:", likedPosts[postId]);
 
-                await axios({ 
-                    method, 
-                    url, 
-                    headers: { 
-                        Authorization: token,
-                        "Content-Type": "application/json",
-                        Accept: '*/*'
-                    },
-                    withCredentials: true
-                });
+            const isLiked = likedPosts[postId];
+            const url = `http://${config.IP_ADD}/travel/likes/${postId}`;
+            const method = isLiked ? "delete" : "post";
+
+            console.log("요청 메서드:", method);
+            console.log("요청 URL:", url);
+            console.log("요청 토큰:", token);
+
+            const response = await axios({ 
+                method, 
+                url, 
+                headers: { 
+                    Authorization: token,
+                    "Content-Type": "application/json",
+                    Accept: '*/*'
+                },
+                withCredentials: true
+            });
+
+            console.log("좋아요 응답:", response.data);
 
             // 좋아요 상태 업데이트
             setLikedPosts((prev) => ({
@@ -176,11 +230,24 @@ const Post = () => {
             );
         } catch (error) {
             console.error("Error updating like:", error);
+            console.error("Error details:", error.response || "No response");
             
-            // 토큰 오류 처리, HTML 응답 체크 추가
-            if (error.response && 
+            // 오류 응답 상세 로깅
+            if (error.response) {
+                console.error("Status:", error.response.status);
+                console.error("Headers:", error.response.headers);
+                console.error("Data:", error.response.data);
+            }
+            
+            // HTML 응답 체크 - 더 완화된 조건
+            const isHtmlResponse = error.response && 
                 typeof error.response.data === 'string' && 
-                error.response.data.includes('<!DOCTYPE html>')) {
+                (error.response.data.includes('<!DOCTYPE html>') || 
+                 error.response.data.includes('<html>'));
+                
+            if (isHtmlResponse || 
+                (error.response && (error.response.status === 401 || error.response.status === 403))) {
+                console.log("인증 문제 감지됨");
                 alert("인증이 필요합니다. 다시 로그인해주세요.");
                 navigate("/login");
                 return;
@@ -199,7 +266,7 @@ const Post = () => {
     const toMyPost = () => {
         const userId = getUserId();
         if (!userId) {
-            alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
+            alert("로그인 후 이용 가능합니다.");
             navigate("/login");
             return;
         }
@@ -257,7 +324,10 @@ const Post = () => {
                                         >
                                             <span
                                                 className="span_style"
-                                                onClick={() => likeButtonClick(post.postId)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    likeButtonClick(post.postId);
+                                                }}
                                                 style={{
                                                     cursor: "pointer",
                                                     marginLeft: "5px",
