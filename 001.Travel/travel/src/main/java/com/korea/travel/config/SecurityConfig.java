@@ -53,7 +53,8 @@ public class SecurityConfig {
                    "/login/oauth2/code/google",
                    "/static/**",
                    "/travel/posts/**",  // 게시글 조회는 인증 없이 허용
-                   "/travel/likes/**"   // 좋아요 조회는 인증 없이 허용
+                   "/travel/likes/**",   // 좋아요 조회는 인증 없이 허용
+                   "/uploads/**"
                ).permitAll()  //경로는 인증 없이 허용
                .anyRequest().authenticated()  // 그 외 요청은 인증 필요
            )//authorizeHttpRequests
