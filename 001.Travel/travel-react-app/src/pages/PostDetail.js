@@ -9,7 +9,6 @@ import { Delete } from "@mui/icons-material";
 import { CopyListContext } from "../context/CopyListContext";
 import { CopyPlaceListContext } from "../context/CopyPlaceListContext";
 
-console.log("서버 IP 주소:", config.IP_ADD);
 
 const PostDetail = () => {
     const { user } = useContext(UserContext); // 사용자 정보
