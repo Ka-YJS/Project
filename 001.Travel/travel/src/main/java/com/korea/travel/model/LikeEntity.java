@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.persistence.ForeignKey;
 
 @Data
 @Table(name = "likes")
@@ -35,7 +36,7 @@ public class LikeEntity {
    private UserType userType; // 사용자 타입 (REGULAR 또는 SOCIAL)
    
    @ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name = "post_id")
+   @JoinColumn(name = "post_id", foreignKey = @ForeignKey(name = "FK_likes_post_id"))
    private PostEntity postEntity; // 좋아요가 눌린 게시글
    
    // 사용자 타입 열거형
