@@ -19,6 +19,7 @@ import Logo from "./pages/Logo"
 import { CopyPlaceListContext } from "./context/CopyPlaceListContext";
 import MyPost from "./pages/MyPost";
 import { ListProvider } from "./context/ListContext"; // ListProvider 임포트 확인
+import { ImageProvider } from './context/ImageContext';
 
 // axios 인터셉터 설정
 axios.interceptors.response.use(
@@ -65,29 +66,31 @@ function App() {
   return (
     <ListProvider>
       <UserContext.Provider value={{user, setUser, googleUser, setGoogleUser}}>
-        <PostContext.Provider value={{postList, setPostList}}>
-          <PlaceContext.Provider value={{placeList, setPlaceList}}>
-            <CopyListContext.Provider value={{copyList, setCopyList}}>
-              <CopyPlaceListContext.Provider value={{copyPlaceList, setCopyPlaceList}}>
-                <div className="AppWrapper">
-                  <Router>
-                    <Routes>
-                      <Route path="/" element={<HomeScreen />} />
-                      <Route path="/main" element={<MainScreen />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/signup" element={<Signup />} />
-                      <Route path="postdetail/:id" element={<PostDetail />} />
-                      <Route path="post" element={<Post />} />
-                      <Route path="postEdit/:id" element={<MapEdit />} />
-                      <Route path="map" element={<Map />} />
-                      <Route path="/mypost/:id" element={<MyPost />} />
-                    </Routes>
-                  </Router>
-                </div>
-              </CopyPlaceListContext.Provider>
-            </CopyListContext.Provider>
-          </PlaceContext.Provider>
-        </PostContext.Provider>
+      <ImageProvider>
+          <PostContext.Provider value={{postList, setPostList}}>
+            <PlaceContext.Provider value={{placeList, setPlaceList}}>
+              <CopyListContext.Provider value={{copyList, setCopyList}}>
+                <CopyPlaceListContext.Provider value={{copyPlaceList, setCopyPlaceList}}>
+                  <div className="AppWrapper">
+                    <Router>
+                      <Routes>
+                        <Route path="/" element={<HomeScreen />} />
+                        <Route path="/main" element={<MainScreen />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route path="postdetail/:id" element={<PostDetail />} />
+                        <Route path="post" element={<Post />} />
+                        <Route path="postEdit/:id" element={<MapEdit />} />
+                        <Route path="map" element={<Map />} />
+                        <Route path="/mypost/:id" element={<MyPost />} />
+                      </Routes>
+                    </Router>
+                  </div>
+                </CopyPlaceListContext.Provider>
+              </CopyListContext.Provider>
+            </PlaceContext.Provider>
+          </PostContext.Provider>
+        </ImageProvider>
       </UserContext.Provider>
     </ListProvider>
   );
