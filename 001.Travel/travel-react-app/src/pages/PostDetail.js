@@ -534,77 +534,81 @@ const PostDetail = () => {
    };
    
    // 인증된 이미지 컴포넌트
-   const AuthenticatedImage = ({ imageUrl }) => {
-       const [imageSrc, setImageSrc] = useState("");
-       const [isLoading, setIsLoading] = useState(true);
-       const [error, setError] = useState(false);
-       
-       useEffect(() => {
-           const loadImage = async () => {
-               try {
-                   const token = getAuthToken ? getAuthToken() : getLocalAuthToken();
-                   if (!token) {
-                       setError(true);
-                       setIsLoading(false);
-                       return;
-                   }
-                   
-                   const response = await fetch(`http://${config.IP_ADD}${imageUrl}`, {
-                       headers: { Authorization: token }
-                   });
-                   
-                   if (response.ok) {
-                       const blob = await response.blob();
-                       setImageSrc(URL.createObjectURL(blob));
-                   } else {
-                       setError(true);
-                   }
-               } catch (error) {
-                   console.error("이미지 로드 실패:", error);
-                   setError(true);
-               } finally {
-                   setIsLoading(false);
-               }
-           };
-           
-           loadImage();
-       }, [imageUrl]);
-       
-       if (isLoading) {
-           return <div style={{
-               height: "20vh", 
-               width: "20vw", 
-               display: "flex", 
-               justifyContent: "center", 
-               alignItems: "center",
-               backgroundColor: "#f5f5f5"
-           }}>로딩 중...</div>;
-       }
-       
-       if (error || !imageSrc) {
-           return <div style={{
-               height: "20vh", 
-               width: "20vw", 
-               display: "flex", 
-               justifyContent: "center", 
-               alignItems: "center",
-               backgroundColor: "#f8d7da"
-           }}>이미지를 불러올 수 없습니다</div>;
-       }
-       
-       return (
-           <img
-               src={imageSrc}
-               alt="이미지"
-               style={{
-                   height: "20vh",
-                   width: "20vw",
-                   padding: 0,
-                   margin: 0,
-               }}
-           />
-       );
-   };
+    const AuthenticatedImage = ({ imageUrl, customStyle = {} }) => {
+        const [imageSrc, setImageSrc] = useState("");
+        const [isLoading, setIsLoading] = useState(true);
+        const [error, setError] = useState(false);
+        
+        useEffect(() => {
+            const loadImage = async () => {
+                try {
+                    const token = getAuthToken ? getAuthToken() : getLocalAuthToken();
+                    if (!token) {
+                        setError(true);
+                        setIsLoading(false);
+                        return;
+                    }
+                    
+                    const response = await fetch(`http://${config.IP_ADD}${imageUrl}`, {
+                        headers: { Authorization: token }
+                    });
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        setImageSrc(URL.createObjectURL(blob));
+                    } else {
+                        setError(true);
+                    }
+                } catch (error) {
+                    console.error("이미지 로드 실패:", error);
+                    setError(true);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            
+            loadImage();
+        }, [imageUrl]);
+        
+        if (isLoading) {
+            return <div style={{
+                height: customStyle.height || "20vh", 
+                width: customStyle.width || "20vw", 
+                display: "flex", 
+                justifyContent: "center", 
+                alignItems: "center",
+                backgroundColor: "#f5f5f5",
+                ...customStyle
+            }}>로딩 중...</div>;
+        }
+        
+        if (error || !imageSrc) {
+            return <div style={{
+                height: customStyle.height || "20vh", 
+                width: customStyle.width || "20vw", 
+                display: "flex", 
+                justifyContent: "center", 
+                alignItems: "center",
+                backgroundColor: "#f8d7da",
+                ...customStyle
+            }}>이미지를 불러올 수 없습니다</div>;
+        }
+        
+        return (
+            <img
+                src={imageSrc}
+                alt="이미지"
+                style={{
+                    height: customStyle.height || "20vh",
+                    width: customStyle.width || "20vw",
+                    padding: 0,
+                    margin: 0,
+                    objectFit: customStyle.objectFit || "cover",
+                    ...customStyle
+                }}
+            />
+        );
+    };
 
    return (
        <div>
@@ -758,10 +762,13 @@ const PostDetail = () => {
                                     {/* 기존 이미지 */}
                                     {existingImageUrls.map((url, index) => (
                                         <div key={`existing-${index}`} style={{ position: "relative" }}>
-                                            <img 
-                                                src={`http://${config.IP_ADD}${url}`} 
-                                                alt={`existing-${index}`}
-                                                style={{ width: "100%", height: "200px", objectFit: "cover" }}
+                                            <AuthenticatedImage 
+                                                imageUrl={url} 
+                                                customStyle={{ 
+                                                    width: "100%", 
+                                                    height: "200px", 
+                                                    objectFit: "cover" 
+                                                }} 
                                             />
                                             <Delete 
                                                 onClick={() => handleDeleteImage(index, true)} 
