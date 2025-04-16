@@ -1,5 +1,7 @@
 package com.korea.travel.model;
 import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -62,7 +64,7 @@ public class PostEntity {
     private UserEntity userEntity;            // 해당 게시글을 작성한 UserEntity
     
     // 좋아요를 눌렀던 유저들과의 관계 (OneToMany)
-    @OneToMany(mappedBy = "postEntity")
+    @OneToMany(mappedBy = "postEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LikeEntity> likeEntities; // 좋아요 엔티티 리스트
     // 좋아요 수 계산
     public int getLikeCount() {
