@@ -42,6 +42,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
        
        String requestURI = request.getRequestURI();
        // 인증이 필요 없는 엔드포인트 목록
+       
+       System.out.println("JWT Filter - Processing request: " + requestURI);
+       
        if (requestURI.equals("/travel/userIdCheck") ||
                requestURI.equals("/travel/login") || 
                requestURI.equals("/travel/signup")|| 
