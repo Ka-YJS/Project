@@ -52,7 +52,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                requestURI.startsWith("/travel/email") ||
                requestURI.startsWith("/api/social") ||  
                requestURI.startsWith("/social") ||      
-               requestURI.startsWith("/login/oauth2/code/google")
+               requestURI.startsWith("/login/oauth2/code/google") ||
+               requestURI.startsWith("/uploads/")
                ) {
            filterChain.doFilter(request, response);
            return;
