@@ -534,7 +534,7 @@ const PostDetail = () => {
    };
    
    // 인증된 이미지 컴포넌트
-    const AuthenticatedImage = ({ imageUrl, customStyle = {} }) => {
+   const AuthenticatedImage = ({ imageUrl, customStyle = {} }) => {
         const [imageSrc, setImageSrc] = useState("");
         const [isLoading, setIsLoading] = useState(true);
         const [error, setError] = useState(false);
@@ -542,27 +542,12 @@ const PostDetail = () => {
         useEffect(() => {
             const loadImage = async () => {
                 try {
-                    const token = getAuthToken ? getAuthToken() : getLocalAuthToken();
-                    if (!token) {
-                        setError(true);
-                        setIsLoading(false);
-                        return;
-                    }
-                    
-                    const response = await fetch(`http://${config.IP_ADD}${imageUrl}`, {
-                        headers: { Authorization: token }
-                    });
-                    
-                    if (response.ok) {
-                        const blob = await response.blob();
-                        setImageSrc(URL.createObjectURL(blob));
-                    } else {
-                        setError(true);
-                    }
+                    // 직접 URL을 사용하여 이미지를 로드
+                    setImageSrc(`http://${config.IP_ADD}${imageUrl}`);
+                    setIsLoading(false);
                 } catch (error) {
                     console.error("이미지 로드 실패:", error);
                     setError(true);
-                } finally {
                     setIsLoading(false);
                 }
             };
@@ -598,6 +583,7 @@ const PostDetail = () => {
             <img
                 src={imageSrc}
                 alt="이미지"
+                onError={() => setError(true)}
                 style={{
                     height: customStyle.height || "20vh",
                     width: customStyle.width || "20vw",
