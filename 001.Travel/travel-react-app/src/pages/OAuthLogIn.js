@@ -159,8 +159,6 @@ const OAuthLogIn = () => {
                         throw new Error("토큰 저장에 실패했습니다.");
                     }
                 
-                    console.log("토큰 검증 성공:", storedToken);
-                    
                     // 로그인 후 리다이렉트 또는 상태 업데이트
                     navigate('/main');
                 } catch (error) {
