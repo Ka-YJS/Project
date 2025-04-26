@@ -79,13 +79,6 @@ const PostDetail = () => {
        const currentUserId = getUserId();
        const postUserId = post.userId || '';
        
-       // 디버깅용 로그
-       console.log("게시글 상세 정보:", post);
-       console.log("post.userId:", postUserId);
-       console.log("currentUserId:", currentUserId);
-       console.log("사용자 닉네임:", user.userNickName || user.nickname);
-       console.log("게시글 닉네임:", post.userNickname);
-       
        // 소셜 로그인 접두사 제거 후 비교를 위한 함수
        const extractBaseId = (id) => {
            const socialPrefixes = ['google_', 'kakao_', 'social_'];
@@ -100,22 +93,20 @@ const PostDetail = () => {
        const baseCurrentUserId = extractBaseId(currentUserId);
        console.log("extractBaseId(currentUserId):", baseCurrentUserId);
        
-       // 방법 1: 기본 ID 비교 
+       // 기본 ID 비교 
        if (String(postUserId) === String(currentUserId)) {
            console.log("기본 ID 비교 일치");
            return true;
        }
        
-       // 방법 2: 소셜 로그인 ID에서 접두사 제거 후 비교
+       // 소셜 로그인 ID에서 접두사 제거 후 비교
        if (String(postUserId) === String(baseCurrentUserId)) {
            console.log("접두사 제거 후 ID 비교 일치");
            return true;
        }
        
-       // 방법 3: 서버에서 받은 소셜 ID와 authProvider 비교 (백엔드 수정 후)
+       // 서버에서 받은 소셜 ID와 authProvider 비교
        if (post.socialId && post.authProvider) {
-           console.log("게시글 소셜 정보:", post.authProvider, post.socialId);
-           console.log("사용자 소셜 정보:", user.authProvider, baseCurrentUserId);
            
            const isSameProvider = user.authProvider === post.authProvider;
            const isSameSocialId = baseCurrentUserId === post.socialId;
@@ -126,7 +117,7 @@ const PostDetail = () => {
            }
        }
        
-       // 방법 4: 닉네임 비교 (마지막 수단)
+       // 닉네임 비교 (마지막 수단)
        const userNickname = user.userNickName || user.nickname;
        if (post.userNickname && userNickname && 
            post.userNickname.trim().toLowerCase() === userNickname.trim().toLowerCase()) {
@@ -134,7 +125,7 @@ const PostDetail = () => {
            return true;
        }
        
-       // 방법 5: 특수 케이스: 카카오 로그인
+       // 특수 케이스: 카카오 로그인
        if (user.authProvider === 'KAKAO' && !isNaN(Number(postUserId)) && Number(postUserId) > 0) {
            console.log("카카오 로그인 특수 케이스 확인:", postUserId, baseCurrentUserId);
            
