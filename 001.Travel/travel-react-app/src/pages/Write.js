@@ -167,11 +167,6 @@ const Write = () => {
         selectedFiles.forEach((file) => formData.append("files", file));
     
         try {
-            // 폼 데이터 로깅 (디버깅용)
-            console.log("FormData 내용:");
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value instanceof File ? `파일: ${value.name}` : value}`);
-            }
             
             // API 엔드포인트 확인
             const endpoint = `http://${config.IP_ADD}/travel/write/${userId}`;
