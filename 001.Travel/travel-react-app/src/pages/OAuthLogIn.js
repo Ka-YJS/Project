@@ -49,12 +49,12 @@ const OAuthLogIn = () => {
             // Session 정보를 user 객체로 저장
             const userData = {
                 id: response.data.socialId,
-            name: response.data.name,
-            nickName: response.data.name, // 소셜 로그인은 이름을 닉네임으로 사용
-            email: response.data.email,
-            picture: response.data.picture,
-            authProvider: 'GOOGLE',
-            phoneNumber: null // 소셜 로그인은 전화번호 없음
+                name: response.data.name,
+                nickName: response.data.name, // 소셜 로그인은 이름을 닉네임으로 사용
+                email: response.data.email,
+                picture: response.data.picture,
+                authProvider: 'GOOGLE',
+                phoneNumber: null // 소셜 로그인은 전화번호 없음
             };
             
             // Context 업데이트
