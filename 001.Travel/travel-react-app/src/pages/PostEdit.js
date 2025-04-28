@@ -292,11 +292,6 @@ const PostEdit = () => {
         // 새 파일 추가
         selectedFiles.forEach((file) => formData.append("files", file));
 
-        // FormData 디버깅
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}:`, value);
-        }
-        
         console.log("FormData 전송 직전 닉네임:", formData.get("userNickName"));
 
         try {
