@@ -59,11 +59,6 @@ function MapWrite() {
   // ListContext에서 list와 setList를 가져옴
   const { list, setList } = useContext(ListContext);
   
-  // 디버깅: 컴포넌트 마운트 및 업데이트시 list 상태 확인
-  useEffect(() => {
-    console.log("MapWrite - 현재 list 상태:", list);
-  }, [list]);
-
   const containerStyle = {
     width: '700px',
     height: '400px'
