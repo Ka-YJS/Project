@@ -165,18 +165,6 @@ const PostDetail = () => {
            
            const data = response.data.data[0];
            
-           // 소셜 로그인 정보 디버깅
-           console.log("받은 게시글 데이터:", data);
-           if (data.authProvider && data.socialId) {
-               console.log("게시글 소셜 정보:", data.authProvider, data.socialId);
-           }
-           
-           // 현재 사용자 정보 디버깅
-           if (user) {
-               console.log("현재 사용자:", user.authProvider, user.id);
-               console.log("현재 사용자 닉네임:", user.userNickName || user.nickname);
-           }
-           
            setPost(data);
            setImageUrls(data.imageUrls || []);
            setExistingImageUrls(data.imageUrls || []); // 기존 이미지 URL 설정
@@ -322,13 +310,6 @@ const PostDetail = () => {
            }
        }
    }, [id, user, navigate]); // navigate도 의존성 배열에 추가
-
-   // 게시글 소유자 확인용 디버깅 로그 추가
-   useEffect(() => {
-       if (post.userId) {
-           console.log("게시글 소유자 확인:", isPostOwner());
-       }
-   }, [post.userId]);
 
    if (!post) {
        return (
