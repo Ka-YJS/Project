@@ -102,10 +102,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                
                // URL에서 사용자 ID 추출
                String pathUserId = extractUserIdFromPath(requestURI);
-               
-               // 디버깅 로그 추가
-               System.out.println("Token userId: " + userId);
-               System.out.println("Path userId: " + pathUserId);
 
                // 토큰에서 추출한 userId와 URL에서 추출한 userId 비교
                if (pathUserId != null && !pathUserId.equals(userId) && !isCompatibleId(pathUserId, userId)) {
