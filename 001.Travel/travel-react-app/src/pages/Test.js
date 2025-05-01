@@ -104,10 +104,7 @@ function MapWrite() {
   };
 
   // 마커 클릭 핸들러
-  // 마커 클릭 핸들러
 const handleMarkerClick = (marker) => {
-  console.log("마커 클릭 이벤트 발생!");
-  console.log("전달된 marker 객체:", marker);
   
   // marker가 null이거나 undefined인 경우 체크
   if (!marker) {
@@ -126,9 +123,6 @@ const handleMarkerClick = (marker) => {
   } else {
     const placeName = marker.name;
     console.log("사용할 장소 이름:", placeName);
-    
-    // 현재 list 상태 확인
-    console.log("현재 list 상태:", list);
     
     // 이미 추가된 장소인지 확인
     if (!list.includes(placeName)) {
