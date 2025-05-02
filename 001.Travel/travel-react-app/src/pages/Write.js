@@ -170,9 +170,6 @@ const Write = () => {
             
             // API 엔드포인트 확인
             const endpoint = `http://${config.IP_ADD}/travel/write/${userId}`;
-            console.log("요청 URL:", endpoint);
-            console.log("사용자 ID:", userId);
-            console.log("인증 토큰 유무:", token ? "토큰 있음" : "토큰 없음");
             
             // 헤더 설정 및 로깅
             const headers = {
