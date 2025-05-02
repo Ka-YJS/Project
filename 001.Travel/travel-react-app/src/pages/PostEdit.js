@@ -303,16 +303,6 @@ const PostEdit = () => {
                 return;
             }
 
-            console.log("수정 요청 보내기 전 데이터:", {
-                postTitle,
-                postContent,
-                userNickName: userNickname,
-                authProvider: user.authProvider,
-                socialId: user.id,
-                placeList: copyList?.join(", ") || "",
-                existingImageUrls
-            });
-            
             console.log("요청 URL:", `http://${config.IP_ADD}/travel/posts/postEdit/${id}`);
             console.log("인증 토큰:", token);
 
