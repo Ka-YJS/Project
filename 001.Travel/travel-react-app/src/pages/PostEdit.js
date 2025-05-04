@@ -50,10 +50,6 @@ const PostEdit = () => {
         }
     };
 
-    useEffect(() => {
-        console.log("User 객체 전체 구조:", JSON.stringify(user, null, 2));
-    }, [user]);
-
     // 게시글 데이터 불러오기
     useEffect(() => {
         const fetchPostDetails = async () => {
@@ -66,9 +62,6 @@ const PostEdit = () => {
                     return;
                 }
 
-                console.log("게시글 상세 조회 요청 - ID:", id);
-                console.log("사용 토큰:", token);
-
                 const response = await axios.get(`http://${config.IP_ADD}/travel/posts/postDetail/${id}`, {
                     headers: { 
                         "Content-Type": "multipart/form-data",
@@ -80,16 +73,10 @@ const PostEdit = () => {
                 
                 const postData = response.data.data[0];
                 setOriginalPost(postData); // 원본 게시글 정보 전체 저장
-                console.log("받은 게시글 데이터:", postData);
 
                 // 권한 확인
                 const userId = postData.userId;
                 const currentUserId = getUserId();
-                
-                console.log("게시글 작성자 ID:", userId);
-                console.log("현재 사용자 ID:", currentUserId);
-                console.log("게시글 닉네임:", postData.userNickname);
-                console.log("현재 사용자 닉네임:", getNormalizedNickname(user));
 
                 // 게시글 소유권 확인
                 const isOwner = isPostOwner(postData);
@@ -106,7 +93,6 @@ const PostEdit = () => {
                 // 여행지 리스트 설정
                 setCopyPlaceList(postData.placeList || []);
                 setCopyList(postData.placeList || []);
-                console.log("여행지 리스트:", postData.placeList);
                     
             } catch (error) {
                 console.error("게시글 정보 불러오기 실패:", error);
@@ -156,43 +142,6 @@ const PostEdit = () => {
         };
         
         const baseCurrentUserId = extractBaseId(currentUserId);
-        
-        // 방법 1: 기본 ID 비교 
-        if (String(postUserId) === String(currentUserId)) {
-            console.log("기본 ID 비교 일치");
-            return true;
-        }
-        
-        // 방법 2: 소셜 로그인 ID에서 접두사 제거 후 비교
-        if (String(postUserId) === String(baseCurrentUserId)) {
-            console.log("접두사 제거 후 ID 비교 일치");
-            return true;
-        }
-        
-        // 방법 3: 서버에서 받은 소셜 ID와 authProvider 비교
-        if (post.socialId && post.authProvider) {
-            const isSameProvider = user.authProvider === post.authProvider;
-            const isSameSocialId = baseCurrentUserId === post.socialId;
-            
-            if (isSameProvider && isSameSocialId) {
-                console.log("소셜 제공자와 ID 일치");
-                return true;
-            }
-        }
-        
-        // 방법 4: 닉네임 비교 - 이 방법은 신중하게 사용
-        const userNickname = getNormalizedNickname(user);
-        if (post.userNickname && userNickname && 
-            post.userNickname.trim().toLowerCase() === userNickname.toLowerCase()) {
-            console.log("닉네임 일치로 소유자 확인됨");
-            return true;
-        }
-        
-        // 방법 5: 특수 케이스: 카카오 로그인
-        if (user.authProvider === 'KAKAO' && !isNaN(Number(postUserId)) && Number(postUserId) > 0) {
-            console.log("카카오 로그인 특수 케이스 확인");
-            return true;
-        }
         
         return false;
     };
@@ -260,11 +209,9 @@ const PostEdit = () => {
         if (originalPost && originalPost.userNickname) {
             // 원본 닉네임이 있으면 그대로 사용 (항상 게시글의 원 저자 정보 유지)
             userNickname = originalPost.userNickname;
-            console.log("원본 닉네임 사용:", userNickname);
         } else {
             // 원본 닉네임이 없으면 현재 사용자 닉네임 사용 (새 게시글 작성 시나리오)
             userNickname = getNormalizedNickname(user);
-            console.log("현재 사용자 닉네임 사용:", userNickname);
         }
 
         // FormData 생성 및 전송
@@ -292,7 +239,6 @@ const PostEdit = () => {
         // 새 파일 추가
         selectedFiles.forEach((file) => formData.append("files", file));
 
-        console.log("FormData 전송 직전 닉네임:", formData.get("userNickName"));
 
         try {
             // 일관된 토큰 사용
@@ -303,9 +249,6 @@ const PostEdit = () => {
                 return;
             }
 
-            console.log("요청 URL:", `http://${config.IP_ADD}/travel/posts/postEdit/${id}`);
-            console.log("인증 토큰:", token);
-
             const response = await axios.put(`http://${config.IP_ADD}/travel/posts/postEdit/${id}`, formData, {
                 headers: { 
                     "Content-Type": "multipart/form-data",
@@ -315,11 +258,8 @@ const PostEdit = () => {
                 withCredentials: true
             });
 
-            console.log("응답 데이터:", response.data);
-            console.log("응답 데이터 상세:", JSON.stringify(response.data, null, 2));
             alert("글이 수정되었습니다!");
 
-            console.log("Redirecting to post ID:", id);
             navigate(`/postdetail/${id}`, { state: { from: location.state?.from } });  // 이전 경로로 이동
             
         } catch (error) {
