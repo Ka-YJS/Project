@@ -119,17 +119,13 @@ const handleMarkerClick = (marker) => {
     const placeName = marker.title || marker.id || 
                      (marker.place && marker.place.name) || 
                      "이름 없는 장소";
-    console.log("대체 이름으로 사용:", placeName);
   } else {
     const placeName = marker.name;
-    console.log("사용할 장소 이름:", placeName);
     
     // 이미 추가된 장소인지 확인
     if (!list.includes(placeName)) {
       // list를 새로운 배열로 만들어 복사 후 추가 (불변성 유지)
       const updatedPlaces = [...list, placeName];
-      console.log("새로운 장소 추가:", placeName);
-      console.log("업데이트될 list:", updatedPlaces);
       
       // ListContext의 list 업데이트
       setList(updatedPlaces);
@@ -151,8 +147,7 @@ const handleMarkerClick = (marker) => {
   const addTestPlace = () => {
     const testPlace = "테스트 여행지 " + (list.length + 1);
     const updatedList = [...list, testPlace];
-    console.log("테스트 장소 강제 추가:", testPlace);
-    console.log("업데이트될 list:", updatedList);
+    
     setList(updatedList);
   };
 
