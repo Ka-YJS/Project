@@ -24,8 +24,6 @@ const Write = () => {
             // authProvider가 있으면 소셜 로그인으로 판단
             const socialLoginCheck = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
             setIsSocialLogin(socialLoginCheck);
-            console.log("사용자 정보:", user);
-            console.log("소셜 로그인 여부:", socialLoginCheck);
         }
     }, [user]);
 
@@ -59,7 +57,6 @@ const Write = () => {
             // 소셜 로그인 제공자에 따라 접두사 추가
             const provider = user.authProvider?.toLowerCase() || 'social';
             const socialId = `${provider}_${user.id}`;
-            console.log("소셜 로그인 ID 생성:", socialId);
             return socialId;
         }
         
@@ -80,25 +77,20 @@ const Write = () => {
     const getAuthToken = () => {
         // localStorage에서 먼저 확인
         const storedToken = localStorage.getItem('accessToken');
-        console.log("LocalStorage 토큰:", storedToken ? "토큰 있음" : "토큰 없음");
         
         if (storedToken) {
             const formattedToken = storedToken.startsWith("Bearer ") ? storedToken : `Bearer ${storedToken}`;
-            console.log("사용할 토큰 형식:", formattedToken.substring(0, 10) + "...");
             return formattedToken;
         }
         
         if (user && user.accessToken) {
-            console.log("사용자 객체의 accessToken 사용");
             return user.accessToken.startsWith("Bearer ") ? user.accessToken : `Bearer ${user.accessToken}`;
         }
         
         if (user && user.token) {
-            console.log("사용자 객체의 token 사용");
             return user.token.startsWith("Bearer ") ? user.token : `Bearer ${user.token}`;
         }
         
-        console.log("토큰을 찾을 수 없음");
         return null;
     };
 
