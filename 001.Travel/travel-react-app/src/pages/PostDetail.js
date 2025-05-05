@@ -91,17 +91,14 @@ const PostDetail = () => {
        };
        
        const baseCurrentUserId = extractBaseId(currentUserId);
-       console.log("extractBaseId(currentUserId):", baseCurrentUserId);
        
        // 기본 ID 비교 
        if (String(postUserId) === String(currentUserId)) {
-           console.log("기본 ID 비교 일치");
            return true;
        }
        
        // 소셜 로그인 ID에서 접두사 제거 후 비교
        if (String(postUserId) === String(baseCurrentUserId)) {
-           console.log("접두사 제거 후 ID 비교 일치");
            return true;
        }
        
@@ -112,7 +109,6 @@ const PostDetail = () => {
            const isSameSocialId = baseCurrentUserId === post.socialId;
            
            if (isSameProvider && isSameSocialId) {
-               console.log("소셜 제공자와 ID 일치");
                return true;
            }
        }
@@ -121,16 +117,6 @@ const PostDetail = () => {
        const userNickname = user.userNickName || user.nickname;
        if (post.userNickname && userNickname && 
            post.userNickname.trim().toLowerCase() === userNickname.trim().toLowerCase()) {
-           console.log("닉네임 일치로 소유자 확인됨");
-           return true;
-       }
-       
-       // 특수 케이스: 카카오 로그인
-       if (user.authProvider === 'KAKAO' && !isNaN(Number(postUserId)) && Number(postUserId) > 0) {
-           console.log("카카오 로그인 특수 케이스 확인:", postUserId, baseCurrentUserId);
-           
-           // 임시 조치: 개발 단계에서 카카오 로그인 사용자는 모든 게시물의 소유자로 인정
-           // 실제 운영 환경에서는 제거해야 함
            return true;
        }
        
@@ -180,15 +166,13 @@ const PostDetail = () => {
                setCopyList(data.placeList);
            }
            
-           // 소유권 확인 즉시 실행
-           console.log("소유권 확인 결과:", isPostOwner());
        } catch (error) {
            console.error("Error fetching post details:", error);
            
            // 토큰 오류 처리
            if (error.response && error.response.status === 401) {
                alert("인증 정보가 만료되었습니다. 다시 로그인해주세요.");
-               // navigate("/login");
+               navigate("/login");
                return;
            }
            
@@ -293,7 +277,6 @@ const PostDetail = () => {
    useEffect(() => {
        // id가 존재하는지 확인하고 초기 데이터 로드
        if (id && id !== 'undefined' && id !== 'null' && !isNaN(id) && user) {
-           console.log("게시글 ID 확인:", id);
            getPostDetail();
            getLikeStatus();
        } else {
@@ -313,7 +296,7 @@ const PostDetail = () => {
 
    if (!post) {
        return (
-           <div style={{ textAlign: "center", padding: "20px", }}>
+           <div style={{ textAlign: "center", padding: "20px" }}>
                <h2>잘못된 경로입니다.</h2>
                <Button variant="contained" color="primary" onClick={() => navigate("/Post")}>
                    게시글 목록으로 이동
