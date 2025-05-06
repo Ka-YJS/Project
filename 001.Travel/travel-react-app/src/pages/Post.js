@@ -54,11 +54,9 @@ const Post = () => {
     // 서버에서 게시물 가져오기 - 오류 처리 강화
     const getPostList = async () => {
         try {
-            console.log("게시물 목록 가져오기 시도");
             
             // 게시물 가져오기 요청 - 인증 없이도 동작하도록 수정
             const response = await axios.get(`http://${config.IP_ADD}/travel/posts`);
-            console.log("게시물 응답 데이터:", response.data);
             
             // 데이터 구조 확인 및 안전 처리
             let fetchedPosts = [];
@@ -70,14 +68,10 @@ const Post = () => {
                 console.error("예상치 못한 응답 구조:", response.data);
             }
             
-            console.log("처리된 게시물 데이터:", fetchedPosts);
-            console.log("게시물 수:", fetchedPosts.length);
-            
             // 좋아요 상태 가져오기 - 인증이 있을 때만 시도
             const token = getAuthToken();
             if (token) {
                 try {
-                    console.log("좋아요 상태 가져오기 시도");
                     const likedStatusPromises = fetchedPosts.map((post) =>
                         axios.get(`http://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
                             headers: { 
@@ -86,7 +80,6 @@ const Post = () => {
                             },
                             withCredentials: true
                         }).catch(error => {
-                            console.log(`Post ${post.postId} like status: not authenticated or error`);
                             return { data: { liked: false } }; // 에러 발생 시 기본값 반환
                         })
                     );
@@ -98,7 +91,6 @@ const Post = () => {
                         return acc;
                     }, {});
     
-                    console.log("좋아요 상태:", likedStatus);
                     setLikedPosts(likedStatus); // 좋아요 상태 업데이트
                 } catch (error) {
                     console.error("Error fetching like status:", error);
@@ -120,19 +112,6 @@ const Post = () => {
                 console.error("Data:", error.response.data);
             }
             
-            // HTML 응답 체크 - 더 완화된 조건
-            const isHtmlResponse = error.response && 
-                typeof error.response.data === 'string' && 
-                (error.response.data.includes('<!DOCTYPE html>') || 
-                 error.response.data.includes('<html>'));
-                
-            if (isHtmlResponse) {
-                console.log("HTML 응답 감지됨 - 인증 문제 가능성");
-                // 이 페이지는 인증 없이도 볼 수 있으므로 경고만 표시
-                alert("서버 응답에 문제가 있습니다. 관리자에게 문의하세요.");
-            } else {
-                alert("게시물을 불러오는 중 오류가 발생했습니다.");
-            }
         }
     };
 
@@ -140,7 +119,6 @@ const Post = () => {
     useEffect(() => {
         // list가 있고 비어있지 않으면 초기화
         if (list && list.length > 0) {
-            console.log("Post.js - list 초기화");
             setList([]);
         }
         
@@ -190,16 +168,9 @@ const Post = () => {
                 return;
             }
 
-            console.log("좋아요 처리 - 포스트 ID:", postId);
-            console.log("현재 좋아요 상태:", likedPosts[postId]);
-
             const isLiked = likedPosts[postId];
             const url = `http://${config.IP_ADD}/travel/likes/${postId}`;
             const method = isLiked ? "delete" : "post";
-
-            console.log("요청 메서드:", method);
-            console.log("요청 URL:", url);
-            console.log("요청 토큰:", token);
 
             const response = await axios({ 
                 method, 
@@ -211,8 +182,6 @@ const Post = () => {
                 },
                 withCredentials: true
             });
-
-            console.log("좋아요 응답:", response.data);
 
             // 좋아요 상태 업데이트
             setLikedPosts((prev) => ({
