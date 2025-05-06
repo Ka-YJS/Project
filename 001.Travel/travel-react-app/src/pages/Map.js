@@ -87,8 +87,6 @@ const Map = () => {
     const handlePlaceChanged = async () => {
         if (searchBox !== null) {
             const place = searchBox.getPlace();  // 검색된 장소 정보 가져오기
-            console.log("place : "+ place);
-            // console.log(JSON.stringify(place, null, 2));
 
             if (place.geometry) {
                 const { location } = place.geometry;
@@ -206,7 +204,7 @@ const Map = () => {
                                 setList(prevList => {
                                     // 중복 항목을 제거한 새 배열 생성
                                     const uniqueItems = [...new Set([...prevList, ...placeList])];
-                                    console.log("추가 후 list:", uniqueItems);
+                                    
                                     return uniqueItems;
                                 });
                                 
