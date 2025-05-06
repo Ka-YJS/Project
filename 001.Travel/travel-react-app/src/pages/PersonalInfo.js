@@ -30,7 +30,6 @@ const PersonalInfo = () => {
       // authProvider가 있으면 소셜 로그인으로 판단
       const socialLoginCheck = user.authProvider === 'GOOGLE' || user.authProvider === 'KAKAO';
       setIsSocialLogin(socialLoginCheck);
-      console.log("소셜 로그인 여부:", socialLoginCheck);
     }
   }, [user]);
 
@@ -169,7 +168,6 @@ const PersonalInfo = () => {
         const response = await call(`/travel/userNickNameEdit/${userId}`, "PATCH", userInfo, user);
         
         if (response) {
-          console.log("닉네임 변경 call 메서드 : " + response);
           setUser(prev => ({...prev, userNickName: response.userNickName}));
           alert("닉네임이 변경되었습니다.");
           setUserNickName("");
@@ -210,14 +208,12 @@ const PersonalInfo = () => {
         const response = await call(`/travel/userPasswordEdit/${userId}`, "PATCH", userInfo, user);
         //response가 존재하는지 확인 if문
         if(response){
-          console.log("비밀번호 변경 call 메서드 : " + response);
           alert("비밀번호가 변경되었습니다.");
           setUserPassword("");
           setNewPassword("");
           setNewPasswordConfirm("");
           closePopup();
         } else {
-          console.log("비밀번호 변경 call 메서드 : " + response);
           alert("비밀번호가 틀렸습니다.");
         }
       } else {
@@ -242,7 +238,6 @@ const PersonalInfo = () => {
       // FormData 객체를 사용해 파일과 기타 데이터를 전송
       const formData = new FormData();
       formData.append('file', file);
-      console.log(formData.get('file'));
 
       try {
         const userId = getUserId();
@@ -281,7 +276,6 @@ const PersonalInfo = () => {
           );
 
           if (response.data) {
-            console.log(response.data);
             // 일반 사용자 정보 업데이트 (userProfileImage 필드)
             setUser(prev => ({...prev, userProfileImage: response.data.userProfileImage}));
           }
@@ -312,10 +306,6 @@ const PersonalInfo = () => {
             }
           );
 
-          if (response.data) {
-            console.log(response.data);
-            setUser(prev => ({...prev, userProfileImage: null}));
-          }
         } else {
           alert("삭제할 프로필이미지가 없습니다.");
         }
