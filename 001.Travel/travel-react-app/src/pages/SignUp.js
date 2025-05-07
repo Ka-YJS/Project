@@ -72,7 +72,7 @@ function Signup() {
   };
 
   //전화번호 정규식
-  const validataeUserPhoneNumber = (userPhoneNumber) =>{
+  const validateUserPhoneNumber = (userPhoneNumber) =>{
     const userPhoneNumberRegex = /^01\d{9}$/;
     return userPhoneNumberRegex.test(userPhoneNumber);
   }
@@ -87,10 +87,10 @@ function Signup() {
       return;
     }
     // 이메일 인증 확인
-    // if (!isEmailVerified) {
-    //   alert("이메일 인증을 완료해주세요.");
-    //   return;
-    // }
+    if (!isEmailVerified) {
+      alert("이메일 인증을 완료해주세요.");
+      return;
+    }
 
     // 비밀번호 형식 검증
     if (!validatePassword(userPassword)) {
@@ -99,7 +99,7 @@ function Signup() {
     }
     // 전화번호 정규식 검증
     
-    if (!validataeUserPhoneNumber(userPhoneNumber)) {
+    if (!validateUserPhoneNumber(userPhoneNumber)) {
       alert("전화번호는 - 들어가지않은 11자리 숫자로 이루어져야 됩니다..");
       return;
     }
@@ -125,7 +125,6 @@ function Signup() {
     await call("/travel/signup","POST",userInfo,user)
       .then((response)=>{
         if(response){
-          console.log("회원가입 call메서드 response : " + response)
           alert("회원가입이 완료되었습니다.")
           navigate("/Login");
         }
@@ -241,7 +240,7 @@ function Signup() {
     const phoneNumber = e.target.value;
     setUserPhoneNumber(phoneNumber);
 
-    if (!validataeUserPhoneNumber(phoneNumber)) {
+    if (!validateUserPhoneNumber(phoneNumber)) {
       setPhoneNumberError("전화번호는 - 들어가지않은 11자리 숫자로 이루어져야 됩니다..");
     } else {
       setPhoneNumberError("");
@@ -348,7 +347,7 @@ function Signup() {
             <div className="form-group">
               <label htmlFor="userNickName">전화번호</label>
               <input
-                id="user"
+                id="user" //안되면 userPhoneNumber로 변경
                 name="userPhoneNumber"
                 value={userPhoneNumber}
                 onChange={handleUserPhoneNumber}
