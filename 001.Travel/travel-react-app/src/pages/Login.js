@@ -49,7 +49,7 @@ const Login = () => {
   };
 
   //전화번호 정규식
-  const validataeUserPhoneNumber = (userPhoneNumber) =>{
+  const validateUserPhoneNumber = (userPhoneNumber) =>{
     const userPhoneNumberRegex = /^01\d{9}$/;
     return userPhoneNumberRegex.test(userPhoneNumber);
   }
@@ -69,7 +69,7 @@ const Login = () => {
   //ID 찾기 팝업창 확인 버튼
   const handleFindIdConfirm = async() => {
 
-    if (!validataeUserPhoneNumber(findUserPhoneNumber)) {
+    if (!validateUserPhoneNumber(findUserPhoneNumber)) {
       alert("전화번호는 - 들어가지않은 11자리 숫자로 이루어져야 됩니다..");
       return;
     }
@@ -174,7 +174,7 @@ const Login = () => {
       return;
     }
     // 전화번호 정규식 검증    
-    if (!validataeUserPhoneNumber(findUserPhoneNumber)) {
+    if (!validateUserPhoneNumber(findUserPhoneNumber)) {
       alert("전화번호는 - 들어가지않은 11자리 숫자로 이루어져야 됩니다..");
       return;
     }
@@ -291,7 +291,7 @@ const Login = () => {
     const phoneNumber = e.target.value;
     setFindUserPhoneNumber(phoneNumber);
 
-    if (!validataeUserPhoneNumber(phoneNumber)) {
+    if (!validateUserPhoneNumber(phoneNumber)) {
       setPhoneNumberError("전화번호는 - 들어가지않은 11자리 숫자로 이루어져야 됩니다..");
     } else {
       setPhoneNumberError("");
@@ -322,7 +322,7 @@ const Login = () => {
     const phoneNumber = e.target.value;
     setFindUserPhoneNumber(phoneNumber);
 
-    if (!validataeUserPhoneNumber(phoneNumber)) {
+    if (!validateUserPhoneNumber(phoneNumber)) {
       setPhoneNumberError("전화번호는 - 들어가지않은 11자리 숫자로 이루어져야 됩니다..");
     } else {
       setPhoneNumberError("");
