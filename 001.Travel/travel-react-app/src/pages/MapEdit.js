@@ -3,7 +3,6 @@ import { GoogleMap, Marker, InfoWindow, Autocomplete, useJsApiLoader } from "@re
 import PostEdit from "./PostEdit";
 import TopIcon from "../TopIcon/TopIcon";
 import config from "../Apikey";
-import { ListContext } from "../context/ListContext";
 import { Button } from "@mui/material";
 import "../css/Map.css";
 import { CopyListContext } from "../context/CopyListContext";
