@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       
       // /uploads/ 경로에 대한 체크를 가장 먼저 수행
       if (requestURI.startsWith("/uploads/")) {
-          System.out.println("JWT Filter - Skipping authentication for uploads: " + requestURI);
+          
           filterChain.doFilter(request, response);
           return;
       }
