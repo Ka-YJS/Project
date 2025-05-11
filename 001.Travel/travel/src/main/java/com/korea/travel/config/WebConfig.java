@@ -6,7 +6,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import lombok.extern.slf4j.Slf4j;
 
 @Configuration
-@Slf4j
 public class WebConfig implements WebMvcConfigurer {
     
     @Override
