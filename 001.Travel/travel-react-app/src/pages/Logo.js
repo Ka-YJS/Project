@@ -1,8 +1,5 @@
 import React from "react";
 import logo4 from '../image/logo4.png';
-import { Margin } from "@mui/icons-material";
-import zIndex from "@mui/material/styles/zIndex";
-import { BiBorderRadius } from "react-icons/bi";
 
 const Logo = () => {
   return (
