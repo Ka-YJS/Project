@@ -5,7 +5,6 @@ import TopIcon from "../TopIcon/TopIcon";  // 상단 아이콘
 import { PlaceContext } from "../context/PlaceContext";  // 장소 목록을 관리하는 컨텍스트
 import { ListContext } from "../context/ListContext";  // 리스트 관리 컨텍스트
 import { Button } from "@mui/material";  // 버튼 컴포넌트
-import { CopyListContext } from "../context/CopyListContext";  // 복사 리스트 관리 (사용되지 않는 듯)
 import "../css/Map.css";  // 스타일 파일
 import backgroundImage from "../image/flowers.png";
 
