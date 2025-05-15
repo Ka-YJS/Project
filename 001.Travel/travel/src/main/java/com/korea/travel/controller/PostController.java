@@ -89,8 +89,6 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효한 인증 토큰이 필요합니다.");
         }
     	
-    	logger.info("게시글 상세 조회 요청: ID={}", id);
-    	
         try {
             // ID 유효성 검사 추가
             if (id == null) {
