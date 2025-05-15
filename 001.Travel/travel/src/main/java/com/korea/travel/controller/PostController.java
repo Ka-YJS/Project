@@ -114,8 +114,6 @@ public class PostController {
             @RequestPart("userNickName") String userNickName,
             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
     	
-        logger.info("게시글 작성 요청 받음 - 사용자 ID: {}, 제목: {}", userId, postTitle);
-        
         try {
             // DTO 생성
             PostDTO postDTO = new PostDTO();
