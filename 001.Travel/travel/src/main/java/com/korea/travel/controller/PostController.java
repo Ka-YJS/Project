@@ -82,8 +82,6 @@ public class PostController {
     public ResponseEntity<?> getPostById(@PathVariable Long id,
     		@RequestHeader(value = "Authorization", required = false) String authHeader) {
 	    	
-    	logger.info("Authorization 헤더: {}", authHeader);
-        
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             logger.warn("유효하지 않은 인증 토큰");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효한 인증 토큰이 필요합니다.");
