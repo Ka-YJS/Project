@@ -119,7 +119,6 @@ public class PostController {
             postDTO.setPostContent(postContent);
             if (placeList != null && !placeList.trim().isEmpty()) {
                 postDTO.setPlaceList(Arrays.asList(placeList.split(", ")));
-                logger.info("장소 목록: {}", placeList);
             }
             postDTO.setUserNickname(userNickName);
             postDTO.setPostCreatedAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
