@@ -125,7 +125,6 @@ public class PostController {
             
             // 파일 처리
             if (files != null && !files.isEmpty()) {
-                logger.info("파일 개수: {}", files.size());
                 List<String> imageUrls = postService.saveFiles(files);
                 postDTO.setImageUrls(imageUrls);
             } else {
