@@ -132,7 +132,6 @@ public class PostController {
             }
             
             // 수정된 서비스 메서드 호출
-            logger.info("게시글 생성 서비스 호출 - 사용자 ID: {}", userId);
             PostDTO createdPost = postService.createPostWithStringUserId(userId, postDTO);
             
             List<PostDTO> dtos = List.of(createdPost);
