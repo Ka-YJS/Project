@@ -136,7 +136,6 @@ public class PostController {
             
             List<PostDTO> dtos = List.of(createdPost);
             ResponseDTO<PostDTO> response = ResponseDTO.<PostDTO>builder().data(dtos).build();
-            logger.info("게시글 생성 성공 - ID: {}", createdPost.getPostId());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("게시글 작성 중 오류: {}", e.getMessage(), e);
