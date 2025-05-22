@@ -28,7 +28,7 @@ const OAuthLogIn = () => {
 
             // 백엔드로 사용자 정보 전송
             const response = await axios.post(
-                `http://${config.IP_ADD}/api/social/user`,
+                `https://${config.IP_ADD}/api/social/user`,
                 {
                     socialId: decoded.sub,
                     name: decoded.name,
@@ -112,7 +112,7 @@ const OAuthLogIn = () => {
 
                     // 백엔드로 인증 정보 전송
                     const response = await axios.post(
-                        `http://${config.IP_ADD}/api/social/user`,
+                        `https://${config.IP_ADD}/api/social/user`,
                         {
                             socialId: userInfo.id,
                             name: userInfo.kakao_account.profile.nickname,

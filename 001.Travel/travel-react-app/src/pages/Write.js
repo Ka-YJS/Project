@@ -161,7 +161,7 @@ const Write = () => {
         try {
             
             // API 엔드포인트 확인
-            const endpoint = `http://${config.IP_ADD}/travel/write/${userId}`;
+            const endpoint = `https://${config.IP_ADD}/travel/write/${userId}`;
             
             // 헤더 설정 및 로깅
             const headers = {

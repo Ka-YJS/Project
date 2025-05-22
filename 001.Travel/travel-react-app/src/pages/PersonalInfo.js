@@ -81,7 +81,7 @@ const PersonalInfo = () => {
     if (user.picture) return user.picture;
     
     // 일반 로그인 프로필 이미지 (서버 저장)
-    if (user.userProfileImage) return `http://${config.IP_ADD}${user.userProfileImage}`;
+    if (user.userProfileImage) return `https://${config.IP_ADD}${user.userProfileImage}`;
     
     return defaultImage;
   };
@@ -135,7 +135,7 @@ const PersonalInfo = () => {
         try {
           // 여기서는 백엔드에 맞는 API 호출 필요
           const response = await axios.patch(
-            `http://${config.IP_ADD}/api/social/user/nickname`, 
+            `https://${config.IP_ADD}/api/social/user/nickname`, 
             { 
               socialId: user.id,
               nickName: userNickName 
@@ -248,7 +248,7 @@ const PersonalInfo = () => {
           formData.append('authProvider', user.authProvider);
           
           const response = await axios.patch(
-            `http://${config.IP_ADD}/api/social/user/profile-image`, 
+            `https://${config.IP_ADD}/api/social/user/profile-image`, 
             formData, 
             {
               headers: { "Content-Type": "multipart/form-data" },
@@ -265,7 +265,7 @@ const PersonalInfo = () => {
         } else {
           // 일반 로그인 사용자 프로필 이미지 변경 (기존 코드)
           const response = await axios.patch(
-            `http://${config.IP_ADD}/travel/userProfileImageEdit/${userId}`, 
+            `https://${config.IP_ADD}/travel/userProfileImageEdit/${userId}`, 
             formData, 
             {
               headers: {
@@ -299,7 +299,7 @@ const PersonalInfo = () => {
         // 일반 로그인 사용자 프로필 이미지 삭제 로직
         if (user.userProfileImage !== null) {
           const response = await axios.patch(
-            `http://${config.IP_ADD}/travel/userProfileImageDelete/${userId}`,
+            `https://${config.IP_ADD}/travel/userProfileImageDelete/${userId}`,
             null, 
             {
               headers: { 'Authorization': `Bearer ${user.token}` },
@@ -324,7 +324,7 @@ const PersonalInfo = () => {
         // 소셜 로그인 사용자 계정 탈퇴 로직
         try {
           const response = await axios.delete(
-            `http://${config.IP_ADD}/api/social/user/${userId}`, 
+            `https://${config.IP_ADD}/api/social/user/${userId}`, 
             {
               data: { authProvider: user.authProvider },
               withCredentials: true

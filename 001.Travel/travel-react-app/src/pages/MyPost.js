@@ -88,7 +88,7 @@ const MyPost = () => {
             console.log("인증 토큰:", token);
             
             // API 엔드포인트 호출
-            const response = await axios.get(`http://${config.IP_ADD}/travel/myPosts/${userId}`, {
+            const response = await axios.get(`https://${config.IP_ADD}/travel/myPosts/${userId}`, {
                 headers: {
                     Authorization: token,
                     Accept: '*/*'
@@ -115,7 +115,7 @@ const MyPost = () => {
             // 좋아요 상태 가져오기
             if (fetchedPosts.length > 0) {
                 const likedStatusPromises = fetchedPosts.map((post) =>
-                    axios.get(`http://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
+                    axios.get(`https://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
                         headers: { 
                             Authorization: token,
                             Accept: '*/*'
@@ -203,7 +203,7 @@ const MyPost = () => {
             }
             
             const isLiked = likedPosts[postId];
-            const url = `http://${config.IP_ADD}/travel/likes/${postId}`;
+            const url = `https://${config.IP_ADD}/travel/likes/${postId}`;
             const method = isLiked ? "delete" : "post";
     
             await axios({ 
@@ -308,7 +308,7 @@ const MyPost = () => {
                                             onClick={() => handlePostClick(post.postId)}
                                             src={
                                                 post.imageUrls && post.imageUrls.length > 0
-                                                    ? `http://${config.IP_ADD}${post.imageUrls[0]}`
+                                                    ? `https://${config.IP_ADD}${post.imageUrls[0]}`
                                                     : imageno
                                             }
                                             alt="썸네일"

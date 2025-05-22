@@ -83,7 +83,7 @@ const TopIcon = ({text}) => {
     if (user.picture) return user.picture;
     
     // 일반 로그인 프로필 이미지 (서버 저장)
-    if (user.userProfileImage) return `http://${config.IP_ADD}${user.userProfileImage}`;
+    if (user.userProfileImage) return `https://${config.IP_ADD}${user.userProfileImage}`;
     
     return defaultImage;
   };

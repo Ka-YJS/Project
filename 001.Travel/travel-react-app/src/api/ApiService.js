@@ -14,7 +14,7 @@ export async function call(api,method,request,user){
         // 동적으로 메서드를 호출
         const response = await axios({
             method: method,
-            url: `http://${config.IP_ADD}${api}`,
+            url: `https://${config.IP_ADD}${api}`,
             data: request,
             headers: headers
         });

@@ -56,7 +56,7 @@ const Post = () => {
         try {
             
             // 게시물 가져오기 요청 - 인증 없이도 동작하도록 수정
-            const response = await axios.get(`http://${config.IP_ADD}/travel/posts`);
+            const response = await axios.get(`https://${config.IP_ADD}/travel/posts`);
             
             // 데이터 구조 확인 및 안전 처리
             let fetchedPosts = [];
@@ -73,7 +73,7 @@ const Post = () => {
             if (token) {
                 try {
                     const likedStatusPromises = fetchedPosts.map((post) =>
-                        axios.get(`http://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
+                        axios.get(`https://${config.IP_ADD}/travel/likes/${post.postId}/isLiked`, {
                             headers: { 
                                 Authorization: token,
                                 Accept: '*/*'
@@ -169,7 +169,7 @@ const Post = () => {
             }
 
             const isLiked = likedPosts[postId];
-            const url = `http://${config.IP_ADD}/travel/likes/${postId}`;
+            const url = `https://${config.IP_ADD}/travel/likes/${postId}`;
             const method = isLiked ? "delete" : "post";
 
             const response = await axios({ 
@@ -273,7 +273,7 @@ const Post = () => {
                                             onClick={() => handlePostClick(post.postId)}
                                             src={
                                                 post.imageUrls && post.imageUrls.length > 0
-                                                    ? `http://${config.IP_ADD}${post.imageUrls[0]}`
+                                                    ? `https://${config.IP_ADD}${post.imageUrls[0]}`
                                                     : imageno
                                             }
                                             alt="썸네일"

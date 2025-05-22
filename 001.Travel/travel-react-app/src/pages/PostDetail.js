@@ -140,7 +140,7 @@ const PostDetail = () => {
            // Bearer 접두사 처리
            const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
    
-           const response = await axios.get(`http://${config.IP_ADD}/travel/posts/postDetail/${id}`, {
+           const response = await axios.get(`https://${config.IP_ADD}/travel/posts/postDetail/${id}`, {
                headers: {
                    "Content-Type": "multipart/form-data",
                    Authorization: authHeader,
@@ -196,7 +196,7 @@ const PostDetail = () => {
            }
            
            // API 호출
-           const response = await axios.get(`http://${config.IP_ADD}/travel/likes/${id}/isLiked`, {
+           const response = await axios.get(`https://${config.IP_ADD}/travel/likes/${id}/isLiked`, {
                headers: { 
                    Authorization: token,
                    Accept: '*/*'
@@ -226,7 +226,7 @@ const PostDetail = () => {
                return;
            }
            
-           const url = `http://${config.IP_ADD}/travel/likes/${id}`;
+           const url = `https://${config.IP_ADD}/travel/likes/${id}`;
            const method = isLiked ? "delete" : "post";
            
            // API 호출 시도
@@ -414,7 +414,7 @@ const PostDetail = () => {
                return;
            }
 
-           const response = await axios.put(`http://${config.IP_ADD}/travel/posts/postEdit/${id}`, formData, {
+           const response = await axios.put(`https://${config.IP_ADD}/travel/posts/postEdit/${id}`, formData, {
                headers: { 
                    "Content-Type": "multipart/form-data",
                    'Authorization': token,
@@ -464,7 +464,7 @@ const PostDetail = () => {
                // Bearer 접두사 처리
                const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
                
-               const response = await axios.delete(`http://${config.IP_ADD}/travel/postDelete/${id}`, {
+               const response = await axios.delete(`https://${config.IP_ADD}/travel/postDelete/${id}`, {
                    headers: {
                        Authorization: authHeader,
                        Accept: '*/*'
@@ -498,7 +498,7 @@ const PostDetail = () => {
             const loadImage = async () => {
                 try {
                     // 직접 URL을 사용하여 이미지를 로드
-                    setImageSrc(`http://${config.IP_ADD}${imageUrl}`);
+                    setImageSrc(`https://${config.IP_ADD}${imageUrl}`);
                     setIsLoading(false);
                 } catch (error) {
                     console.error("이미지 로드 실패:", error);

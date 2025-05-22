@@ -171,7 +171,7 @@ function Signup() {
     setIsLoading(true);
 
     // 이메일 인증 코드 발송
-    axios.get(`http://${config.IP_ADD}/travel/email/auth?address=${userId}`)
+    axios.get(`https://${config.IP_ADD}/travel/email/auth?address=${userId}`)
       .then((response) => {
         setIsLoading(false); // 로딩 상태 해제
         if (response.data.success) {
@@ -202,7 +202,7 @@ function Signup() {
     }
 
     // 인증 코드 검증
-    axios.post(`http://${config.IP_ADD}/travel/email/auth?address=${userId}&authCode=${authCode}`)
+    axios.post(`https://${config.IP_ADD}/travel/email/auth?address=${userId}&authCode=${authCode}`)
       .then((response) => {
         const { success } = response.data;
         if (success) {
