@@ -85,7 +85,7 @@ public class SecurityConfig {
                  response.setHeader("Authorization", "Bearer " + token);
                  
                  // 프론트엔드로 리다이렉트
-                 response.sendRedirect("http://localhost:3000/oauth2/redirect?token=" + token);
+                 response.sendRedirect("https://todo-test-dev.store/oauth2/redirect?token=" + token);
              })
          )//oauth2Login
          .cors(cors -> cors.configurationSource(corsConfigurationSource()))  //CORS 설정 활성화
@@ -109,7 +109,7 @@ public class SecurityConfig {
  @Bean
  public CorsConfigurationSource corsConfigurationSource() {
      CorsConfiguration configuration = new CorsConfiguration();
-     configuration.setAllowedOrigins(Arrays.asList("http://todo-test-dev.store", "https://todo-test-dev.store", "http://localhost:3000", "http://localhost:9090"));
+     configuration.setAllowedOrigins(Arrays.asList("http://todo-test-dev.store", "https://todo-test-dev.store"));
      configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
      configuration.setAllowedHeaders(Arrays.asList("*"));
      configuration.setAllowCredentials(true);
@@ -118,7 +118,7 @@ public class SecurityConfig {
      
      // 정적 리소스를 위한 특별 설정
      CorsConfiguration staticConfiguration = new CorsConfiguration();
-     staticConfiguration.setAllowedOrigins(Arrays.asList("http://todo-test-dev.store", "https://todo-test-dev.store", "http://localhost:3000", "http://localhost:9090"));
+     staticConfiguration.setAllowedOrigins(Arrays.asList("http://todo-test-dev.store", "https://todo-test-dev.store"));
      staticConfiguration.setAllowedMethods(Arrays.asList("GET", "HEAD", "OPTIONS"));
      staticConfiguration.setAllowedHeaders(Arrays.asList("*"));
      staticConfiguration.setAllowCredentials(true);
