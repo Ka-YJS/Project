@@ -42,8 +42,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/travel")
-//@CrossOrigin(origins = "https://countryrat.site") // React 앱이 동작하는 주소
-@CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true") 
+@CrossOrigin(origins = "https://todo-test-dev.store", allowCredentials = "true") // React 앱이 동작하는 주소
 @RequiredArgsConstructor
 public class PostController {
 
